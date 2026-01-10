@@ -44,9 +44,10 @@ const userSchema = new mongoose.Schema(
     secretCode: {
       type: String,
       required: [true, 'Secret code is required'],
-      trim: true,
-      minlength: [4, 'Secret code must be at least 4 characters'],
-      maxlength: [20, 'Secret code cannot exceed 20 characters']
+      select: false // Don't return secret code by default
+      // Note: minlength and maxlength are validated in Joi before reaching the model
+      // After hashing, the secret code will be 60 characters (bcrypt hash),
+      // so we don't validate length here to avoid conflicts with the hashed value
     }
   },
   {
@@ -54,26 +55,50 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Hash password before saving
+// Hash password and secret code before saving
 userSchema.pre('save', async function (next) {
-  // Only hash the password if it has been modified (or is new)
-  if (!this.isModified('password')) {
-    return next();
+  // Hash password if it has been modified (or is new)
+  if (this.isModified('password')) {
+    try {
+      // Hash password with cost of 12
+      const salt = await bcrypt.genSalt(12);
+      this.password = await bcrypt.hash(this.password, salt);
+    } catch (error) {
+      return next(error);
+    }
   }
 
-  try {
-    // Hash password with cost of 12
-    const salt = await bcrypt.genSalt(12);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error);
+  // Hash secret code if it has been modified (or is new)
+  if (this.isModified('secretCode')) {
+    try {
+      // Validate original secret code length before hashing
+      const originalSecretCode = this.secretCode?.trim();
+      if (!originalSecretCode || originalSecretCode.length < 4) {
+        return next(new Error('Secret code must be at least 4 characters'));
+      }
+      if (originalSecretCode.length > 20) {
+        return next(new Error('Secret code cannot exceed 20 characters'));
+      }
+      
+      // Hash secret code with cost of 12
+      const salt = await bcrypt.genSalt(12);
+      this.secretCode = await bcrypt.hash(originalSecretCode, salt);
+    } catch (error) {
+      return next(error);
+    }
   }
+
+  next();
 });
 
 // Method to compare password
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
+};
+
+// Method to compare secret code
+userSchema.methods.compareSecretCode = async function (candidateSecretCode) {
+  return await bcrypt.compare(candidateSecretCode, this.secretCode);
 };
 
 const User = mongoose.model('User', userSchema);

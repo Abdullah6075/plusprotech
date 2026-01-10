@@ -147,8 +147,11 @@ export const forgotPassword = async (req, res, next) => {
   try {
     const { email, secretCode, newPassword } = req.body;
 
-    // Find user by email and include password field
-    const user = await User.findOne({ email }).select('+password');
+    // Normalize email (trim and lowercase)
+    const normalizedEmail = email?.trim().toLowerCase();
+
+    // Find user by email and include password and secretCode fields
+    const user = await User.findOne({ email: normalizedEmail }).select('+password +secretCode');
 
     if (!user) {
       return res.status(404).json({
@@ -157,11 +160,16 @@ export const forgotPassword = async (req, res, next) => {
       });
     }
 
-    // Verify secret code
-    if (user.secretCode !== secretCode) {
+    // Normalize secret code (trim whitespace)
+    const normalizedSecretCode = secretCode?.trim();
+
+    // Verify secret code using bcrypt comparison
+    const isSecretCodeValid = await user.compareSecretCode(normalizedSecretCode);
+    
+    if (!isSecretCodeValid) {
       return res.status(401).json({
         success: false,
-        error: 'Invalid secret code'
+        error: 'Invalid secret code. Please check your secret code and try again.'
       });
     }
 

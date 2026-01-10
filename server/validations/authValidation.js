@@ -116,9 +116,9 @@ export const forgotPasswordValidation = Joi.object({
     }),
 
   secretCode: Joi.string()
+    .trim()
     .min(4)
     .max(20)
-    .trim()
     .required()
     .messages({
       'string.empty': 'Secret code is required',
