@@ -7,6 +7,7 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
+import Categories from './pages/Categories'
 import ProtectedRoute from './components/ProtectedRoute'
 
 /**
@@ -62,7 +63,10 @@ const App = () => {
               <DashboardLayout />
             </ProtectedRoute>
           } 
-        />
+        >
+          <Route index element={<Navigate to="/dashboard/categories" replace />} />
+          <Route path='categories' element={<Categories />} />
+        </Route>
         
         {/* Catch all - redirect to home */}
         <Route path='*' element={<Navigate to='/' replace />} />

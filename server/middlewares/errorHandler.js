@@ -34,6 +34,23 @@ const errorHandler = (err, req, res, next) => {
     message = 'Resource not found';
   }
 
+  // Multer file upload error
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    statusCode = 400;
+    message = 'File size too large. Maximum size is 5MB';
+  }
+
+  if (err.message && err.message.includes('Only image files are allowed')) {
+    statusCode = 400;
+    message = 'Only image files are allowed';
+  }
+
+  // Request entity too large error
+  if (err.status === 413 || err.message?.includes('request entity too large') || err.type === 'entity.too.large') {
+    statusCode = 413;
+    message = 'File size too large. Please upload an image smaller than 5MB';
+  }
+
   // Send error response
   res.status(statusCode).json({
     success: false,

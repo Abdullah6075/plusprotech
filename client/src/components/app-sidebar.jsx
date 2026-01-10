@@ -31,8 +31,8 @@ const getNavLinksByRole = (role) => {
   if (role === "admin") {
     return [
       {
-        name: "Events",
-        url: "/dashboard",
+        name: "Category",
+        url: "/dashboard/category",
         icon: LayoutDashboard,
       },
     ];
@@ -60,7 +60,7 @@ export function AppSidebar({ ...props }) {
             />
           </div>
           <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-semibold">Gitex Global</span>
+            <span className="truncate font-semibold">PlusProtech</span>
             <span className="truncate text-xs text-gray-500">
               Dashboard
             </span>

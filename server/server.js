@@ -1,9 +1,15 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
 import errorHandler from './middlewares/errorHandler.js';
 import authRoutes from './routes/authRoutes.js';
+import categoryRoutes from './routes/categoryRoutes.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load environment variables
 dotenv.config();
@@ -38,8 +44,31 @@ const corsOptions = {
 
 // Middleware
 app.use(cors(corsOptions));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+// Body parsers - only apply to non-multipart requests
+// Use express.json with type option to skip multipart
+app.use(express.json({ 
+  limit: '10mb',
+  type: (req) => {
+    const contentType = req.headers['content-type'] || '';
+    // Only parse JSON, skip multipart/form-data
+    return contentType.includes('application/json') || 
+           (!contentType && req.method !== 'GET' && req.method !== 'HEAD');
+  }
+}));
+
+app.use(express.urlencoded({ 
+  extended: true, 
+  limit: '10mb',
+  type: (req) => {
+    const contentType = req.headers['content-type'] || '';
+    // Only parse URL-encoded, skip multipart/form-data
+    return contentType.includes('application/x-www-form-urlencoded');
+  }
+}));
+
+// Serve static files from uploads folder
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Test endpoint to verify everything is working
 app.get('/api/test', (req, res) => {
@@ -62,6 +91,7 @@ app.get('/api/health', (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // 404 handler for undefined routes
 // In Express 5, wildcard routes must have a named parameter
