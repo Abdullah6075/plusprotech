@@ -48,6 +48,12 @@ const userSchema = new mongoose.Schema(
       // Note: minlength and maxlength are validated in Joi before reaching the model
       // After hashing, the secret code will be 60 characters (bcrypt hash),
       // so we don't validate length here to avoid conflicts with the hashed value
+    },
+    role: {
+      type: String,
+      enum: ['customer', 'admin'],
+      default: 'customer',
+      required: true
     }
   },
   {
