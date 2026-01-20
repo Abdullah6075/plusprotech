@@ -29,6 +29,8 @@ import {
   SidebarMenuButton,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "@/store/authSlice";
 
 const getNavLinksByRole = (role) => {
   if (role === "admin") {
@@ -55,13 +57,22 @@ const getNavLinksByRole = (role) => {
       },
     ];
   }
+  if (role === "customer") {
+    return [
+      {
+        name: "Appointments",
+        url: "/dashboard/appointments",
+        icon: Calendar,
+      },
+    ];
+  }
   return [];
 };
 
 export function AppSidebar({ ...props }) {
-
-
-  const navlinks = getNavLinksByRole("admin");
+  const user = useSelector(selectCurrentUser);
+  const role = user?.role || "customer";
+  const navlinks = getNavLinksByRole(role);
 
   return (
     <Sidebar collapsible="icon" {...props}>

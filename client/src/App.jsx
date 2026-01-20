@@ -1,7 +1,7 @@
 import React from 'react'
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import { selectIsAuthenticated } from './store/authSlice'
+import { selectIsAuthenticated, selectCurrentUser } from './store/authSlice'
 import DashboardLayout from './layouts/DashboardLayout'
 import Home from './pages/Home'
 import Login from './pages/Login'
@@ -11,6 +11,7 @@ import Categories from './pages/Categories'
 import Services from './pages/Services'
 import Models from './pages/Models'
 import ModelServices from './pages/ModelServices'
+import Appointments from './pages/Appointments'
 import ProtectedRoute from './components/ProtectedRoute'
 
 /**
@@ -25,6 +26,21 @@ const PublicRoute = ({ children }) => {
   }
   
   return children;
+};
+
+/**
+ * Dashboard Redirect Component
+ * Redirects to appropriate page based on user role
+ */
+const DashboardRedirect = () => {
+  const user = useSelector(selectCurrentUser);
+  const role = user?.role || 'customer';
+  
+  if (role === 'admin') {
+    return <Navigate to="/dashboard/categories" replace />;
+  }
+  
+  return <Navigate to="/dashboard/appointments" replace />;
 };
 
 const App = () => {
@@ -67,11 +83,12 @@ const App = () => {
             </ProtectedRoute>
           } 
         >
-          <Route index element={<Navigate to="/dashboard/categories" replace />} />
+          <Route index element={<DashboardRedirect />} />
           <Route path='categories' element={<Categories />} />
           <Route path='services' element={<Services />} />
           <Route path='models' element={<Models />} />
           <Route path='model-services' element={<ModelServices />} />
+          <Route path='appointments' element={<Appointments />} />
         </Route>
         
         {/* Catch all - redirect to home */}
