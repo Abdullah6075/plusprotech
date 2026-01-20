@@ -38,7 +38,7 @@ export const api = createApi({
       return fetch(url, options);
     },
   }),
-  tagTypes: ['User', 'Category'],
+  tagTypes: ['User', 'Category', 'Service'],
   endpoints: (builder) => ({}),
 });
 

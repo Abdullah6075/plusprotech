@@ -14,6 +14,7 @@ import {
   Headset,
   Medal,
   MessageCircle,
+  Wrench,
 } from "lucide-react";
 
 import { NavProjects } from "@/components/nav-projects";
@@ -31,9 +32,14 @@ const getNavLinksByRole = (role) => {
   if (role === "admin") {
     return [
       {
-        name: "Category",
-        url: "/dashboard/category",
+        name: "Categories",
+        url: "/dashboard/categories",
         icon: LayoutDashboard,
+      },
+      {
+        name: "Services",
+        url: "/dashboard/services",
+        icon: Wrench,
       },
     ];
   }
