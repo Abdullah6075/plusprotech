@@ -8,6 +8,10 @@ import { setCredentials } from '../store/authSlice';
 import { Input } from '../components/ui/input';
 import { PasswordInput } from '../components/ui/password-input';
 import { Button } from '../components/ui/button';
+import { Label } from '../components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Alert, AlertDescription } from '../components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 /**
  * Register Page
@@ -90,186 +94,182 @@ const Register = () => {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-indigo-50 via-white to-cyan-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-lg w-full">
-        <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
-          {/* Header */}
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900">
-              Create Your Account
-            </h2>
-            <p className="mt-2 text-sm text-gray-600">
+        <Card>
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold">Create Your Account</CardTitle>
+            <CardDescription>
               Fill in your details to get started
-            </p>
-          </div>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form className="space-y-4" onSubmit={formik.handleSubmit}>
+              {/* Name Field */}
+              <div className="space-y-2">
+                <Label htmlFor="name">
+                  Full Name <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="name"
+                  name="name"
+                  type="text"
+                  placeholder="John Doe"
+                  value={formik.values.name}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  aria-invalid={formik.touched.name && formik.errors.name ? 'true' : 'false'}
+                />
+                {formik.touched.name && formik.errors.name ? (
+                  <p className="text-sm text-destructive">{formik.errors.name}</p>
+                ) : null}
+              </div>
 
-          {/* Form */}
-          <form className="space-y-5" onSubmit={formik.handleSubmit}>
-            {/* Name Field */}
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name <span className="text-red-500">*</span>
-              </label>
-              <Input
-                id="name"
-                name="name"
-                type="text"
-                placeholder="John Doe"
-                className="w-full"
-                value={formik.values.name}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
-              {formik.touched.name && formik.errors.name ? (
-                <p className="mt-1.5 text-sm text-red-600">{formik.errors.name}</p>
-              ) : null}
-            </div>
+              {/* Contact Number Field */}
+              <div className="space-y-2">
+                <Label htmlFor="contactNumber">
+                  Contact Number <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="contactNumber"
+                  name="contactNumber"
+                  type="tel"
+                  placeholder="1234567890"
+                  value={formik.values.contactNumber}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  aria-invalid={formik.touched.contactNumber && formik.errors.contactNumber ? 'true' : 'false'}
+                />
+                {formik.touched.contactNumber && formik.errors.contactNumber ? (
+                  <p className="text-sm text-destructive">{formik.errors.contactNumber}</p>
+                ) : null}
+              </div>
 
-            {/* Contact Number Field */}
-            <div>
-              <label htmlFor="contactNumber" className="block text-sm font-medium text-gray-700 mb-2">
-                Contact Number <span className="text-red-500">*</span>
-              </label>
-              <Input
-                id="contactNumber"
-                name="contactNumber"
-                type="tel"
-                placeholder="1234567890"
-                className="w-full"
-                value={formik.values.contactNumber}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
-              {formik.touched.contactNumber && formik.errors.contactNumber ? (
-                <p className="mt-1.5 text-sm text-red-600">{formik.errors.contactNumber}</p>
-              ) : null}
-            </div>
+              {/* Contact Email Field */}
+              <div className="space-y-2">
+                <Label htmlFor="contactEmail">
+                  Contact Email <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="contactEmail"
+                  name="contactEmail"
+                  type="email"
+                  placeholder="contact@example.com"
+                  value={formik.values.contactEmail}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  aria-invalid={formik.touched.contactEmail && formik.errors.contactEmail ? 'true' : 'false'}
+                />
+                {formik.touched.contactEmail && formik.errors.contactEmail ? (
+                  <p className="text-sm text-destructive">{formik.errors.contactEmail}</p>
+                ) : null}
+              </div>
 
-            {/* Contact Email Field */}
-            <div>
-              <label htmlFor="contactEmail" className="block text-sm font-medium text-gray-700 mb-2">
-                Contact Email <span className="text-red-500">*</span>
-              </label>
-              <Input
-                id="contactEmail"
-                name="contactEmail"
-                type="email"
-                placeholder="contact@example.com"
-                className="w-full"
-                value={formik.values.contactEmail}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
-              {formik.touched.contactEmail && formik.errors.contactEmail ? (
-                <p className="mt-1.5 text-sm text-red-600">{formik.errors.contactEmail}</p>
-              ) : null}
-            </div>
+              {/* Email Field */}
+              <div className="space-y-2">
+                <Label htmlFor="email">
+                  Email (for login) <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="user@example.com"
+                  value={formik.values.email}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  aria-invalid={formik.touched.email && formik.errors.email ? 'true' : 'false'}
+                />
+                {formik.touched.email && formik.errors.email ? (
+                  <p className="text-sm text-destructive">{formik.errors.email}</p>
+                ) : null}
+              </div>
 
-            {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email (for login) <span className="text-red-500">*</span>
-              </label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="user@example.com"
-                className="w-full"
-                value={formik.values.email}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
-              {formik.touched.email && formik.errors.email ? (
-                <p className="mt-1.5 text-sm text-red-600">{formik.errors.email}</p>
-              ) : null}
-            </div>
+              {/* Password Field */}
+              <div className="space-y-2">
+                <Label htmlFor="password">
+                  Password <span className="text-destructive">*</span>
+                </Label>
+                <PasswordInput
+                  id="password"
+                  name="password"
+                  placeholder="Enter password (min 6 characters)"
+                  value={formik.values.password}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  aria-invalid={formik.touched.password && formik.errors.password ? 'true' : 'false'}
+                />
+                {formik.touched.password && formik.errors.password ? (
+                  <p className="text-sm text-destructive">{formik.errors.password}</p>
+                ) : null}
+              </div>
 
-            {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password <span className="text-red-500">*</span>
-              </label>
-              <PasswordInput
-                id="password"
-                name="password"
-                placeholder="Enter password (min 6 characters)"
-                className="w-full"
-                value={formik.values.password}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
-              {formik.touched.password && formik.errors.password ? (
-                <p className="mt-1.5 text-sm text-red-600">{formik.errors.password}</p>
-              ) : null}
-            </div>
-
-            {/* Secret Code Field */}
-            <div>
-              <label htmlFor="secretCode" className="block text-sm font-medium text-gray-700 mb-2">
-                Secret Code (for password recovery) <span className="text-red-500">*</span>
-              </label>
-              <Input
-                id="secretCode"
-                name="secretCode"
-                type="text"
-                placeholder="Your secret code (min 4 characters)"
-                className="w-full"
-                value={formik.values.secretCode}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
-              {formik.touched.secretCode && formik.errors.secretCode ? (
-                <p className="mt-1.5 text-sm text-red-600">{formik.errors.secretCode}</p>
-              ) : null}
-              <p className="mt-1.5 text-xs text-gray-500">
-                ⚠️ Remember this code! You'll need it to reset your password.
-              </p>
-            </div>
-
-            {/* Error Message */}
-            {error && (
-              <div className="rounded-lg bg-red-50 border border-red-200 p-4">
-                <p className="text-sm text-red-800">
-                  {error?.data?.error || 'An error occurred. Please try again.'}
+              {/* Secret Code Field */}
+              <div className="space-y-2">
+                <Label htmlFor="secretCode">
+                  Secret Code (for password recovery) <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="secretCode"
+                  name="secretCode"
+                  type="text"
+                  placeholder="Your secret code (min 4 characters)"
+                  value={formik.values.secretCode}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  aria-invalid={formik.touched.secretCode && formik.errors.secretCode ? 'true' : 'false'}
+                />
+                {formik.touched.secretCode && formik.errors.secretCode ? (
+                  <p className="text-sm text-destructive">{formik.errors.secretCode}</p>
+                ) : null}
+                <p className="text-xs text-muted-foreground">
+                  ⚠️ Remember this code! You'll need it to reset your password.
                 </p>
               </div>
-            )}
 
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              disabled={formik.isSubmitting || isLoading}
-              className="w-full"
-              size="lg"
-            >
-              {formik.isSubmitting || isLoading ? (
-                <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Creating account...
-                </span>
-              ) : (
-                'Create Account'
+              {/* Error Message */}
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    {error?.data?.error || 'An error occurred. Please try again.'}
+                  </AlertDescription>
+                </Alert>
               )}
-            </Button>
-          </form>
 
-          {/* Footer */}
-          <div className="text-center pt-4 border-t border-gray-200">
-            <p className="text-sm text-gray-600">
-              Already have an account?{' '}
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                disabled={formik.isSubmitting || isLoading}
+                className="w-full"
+                size="lg"
+              >
+                {formik.isSubmitting || isLoading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Creating account...
+                  </>
+                ) : (
+                  'Create Account'
+                )}
+              </Button>
+            </form>
+
+            {/* Footer */}
+            <div className="mt-6 text-center text-sm pt-4 border-t">
+              <span className="text-muted-foreground">Already have an account? </span>
               <Link
                 to="/login"
-                className="font-medium text-indigo-600 hover:text-indigo-500"
+                className="font-medium text-primary hover:underline"
               >
                 Sign in here
               </Link>
-            </p>
-          </div>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

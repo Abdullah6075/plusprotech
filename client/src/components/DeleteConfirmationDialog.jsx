@@ -40,15 +40,15 @@ const DeleteConfirmationDialog = ({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
-              <AlertTriangle className="h-5 w-5 text-red-600" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
             </div>
             <DialogTitle className="text-left">{title}</DialogTitle>
           </div>
           <DialogDescription className="pt-2 text-left">
             {description}
             {itemName && (
-              <span className="mt-2 block font-semibold text-gray-900">
+              <span className="mt-2 block font-semibold text-foreground">
                 "{itemName}"
               </span>
             )}

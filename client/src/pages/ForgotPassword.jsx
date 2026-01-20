@@ -6,6 +6,10 @@ import { useForgotPasswordMutation } from '../services/authApi';
 import { Input } from '../components/ui/input';
 import { PasswordInput } from '../components/ui/password-input';
 import { Button } from '../components/ui/button';
+import { Label } from '../components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Alert, AlertDescription } from '../components/ui/alert';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 /**
  * Forgot Password Page
@@ -95,180 +99,176 @@ const ForgotPassword = () => {
 
   if (showSuccess || isSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-cyan-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full">
-          <div className="bg-white rounded-2xl shadow-xl p-8 text-center space-y-6">
-            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100">
-              <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Password Reset Successful!</h2>
-              <p className="mt-2 text-sm text-gray-600">
-                Your password has been reset successfully. You will be redirected to the login page shortly.
-              </p>
-            </div>
-            <Button
-              onClick={() => navigate('/login')}
-              className="w-full"
-              size="lg"
-            >
-              Go to Login
-            </Button>
-          </div>
+          <Card>
+            <CardContent className="pt-6 text-center space-y-6">
+              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-primary/10">
+                <CheckCircle2 className="h-8 w-8 text-primary" />
+              </div>
+              <div className="space-y-2">
+                <CardTitle className="text-2xl">Password Reset Successful!</CardTitle>
+                <CardDescription>
+                  Your password has been reset successfully. You will be redirected to the login page shortly.
+                </CardDescription>
+              </div>
+              <Button
+                onClick={() => navigate('/login')}
+                className="w-full"
+                size="lg"
+              >
+                Go to Login
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-cyan-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
-        <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
-          {/* Header */}
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900">
-              Reset Password
-            </h2>
-            <p className="mt-2 text-sm text-gray-600">
+        <Card>
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold">Reset Password</CardTitle>
+            <CardDescription>
               Enter your email and secret code to reset your password
-            </p>
-          </div>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form className="space-y-4" onSubmit={formik.handleSubmit}>
+              {/* Email Field */}
+              <div className="space-y-2">
+                <Label htmlFor="email">
+                  Email Address <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={formik.values.email}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  aria-invalid={formik.touched.email && formik.errors.email ? 'true' : 'false'}
+                />
+                {formik.touched.email && formik.errors.email ? (
+                  <p className="text-sm text-destructive">{formik.errors.email}</p>
+                ) : null}
+              </div>
 
-          {/* Form */}
-          <form className="space-y-5" onSubmit={formik.handleSubmit}>
-            {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address <span className="text-red-500">*</span>
-              </label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="Enter your email"
-                className="w-full"
-                value={formik.values.email}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
-              {formik.touched.email && formik.errors.email ? (
-                <p className="mt-1.5 text-sm text-red-600">{formik.errors.email}</p>
-              ) : null}
-            </div>
-
-            {/* Secret Code Field */}
-            <div>
-              <label htmlFor="secretCode" className="block text-sm font-medium text-gray-700 mb-2">
-                Secret Code <span className="text-red-500">*</span>
-              </label>
-              <Input
-                id="secretCode"
-                name="secretCode"
-                type="text"
-                placeholder="Enter your secret code"
-                className="w-full"
-                maxLength={20}
-                value={formik.values.secretCode}
-                onChange={(e) => {
-                  // Trim whitespace and limit to 20 characters
-                  const trimmedValue = e.target.value.trim();
-                  if (trimmedValue.length <= 20) {
-                    formik.setFieldValue('secretCode', trimmedValue);
-                  }
-                }}
-                onBlur={formik.handleBlur}
-              />
-              {formik.touched.secretCode && formik.errors.secretCode ? (
-                <p className="mt-1.5 text-sm text-red-600">{formik.errors.secretCode}</p>
-              ) : null}
-              <p className="mt-1.5 text-xs text-gray-500">
-                Enter the secret code you provided during registration.
-              </p>
-            </div>
-
-            {/* New Password Field */}
-            <div>
-              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                New Password <span className="text-red-500">*</span>
-              </label>
-              <PasswordInput
-                id="newPassword"
-                name="newPassword"
-                placeholder="Enter new password (min 6 characters)"
-                className="w-full"
-                value={formik.values.newPassword}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
-              {formik.touched.newPassword && formik.errors.newPassword ? (
-                <p className="mt-1.5 text-sm text-red-600">{formik.errors.newPassword}</p>
-              ) : null}
-            </div>
-
-            {/* Confirm Password Field */}
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                Confirm Password <span className="text-red-500">*</span>
-              </label>
-              <PasswordInput
-                id="confirmPassword"
-                name="confirmPassword"
-                placeholder="Confirm your new password"
-                className="w-full"
-                value={formik.values.confirmPassword}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
-              {formik.touched.confirmPassword && formik.errors.confirmPassword ? (
-                <p className="mt-1.5 text-sm text-red-600">{formik.errors.confirmPassword}</p>
-              ) : null}
-            </div>
-
-            {/* Error Message */}
-            {error && (
-              <div className="rounded-lg bg-red-50 border border-red-200 p-4">
-                <p className="text-sm text-red-800">
-                  {error?.data?.error || 'An error occurred. Please try again.'}
+              {/* Secret Code Field */}
+              <div className="space-y-2">
+                <Label htmlFor="secretCode">
+                  Secret Code <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="secretCode"
+                  name="secretCode"
+                  type="text"
+                  placeholder="Enter your secret code"
+                  maxLength={20}
+                  value={formik.values.secretCode}
+                  onChange={(e) => {
+                    // Trim whitespace and limit to 20 characters
+                    const trimmedValue = e.target.value.trim();
+                    if (trimmedValue.length <= 20) {
+                      formik.setFieldValue('secretCode', trimmedValue);
+                    }
+                  }}
+                  onBlur={formik.handleBlur}
+                  aria-invalid={formik.touched.secretCode && formik.errors.secretCode ? 'true' : 'false'}
+                />
+                {formik.touched.secretCode && formik.errors.secretCode ? (
+                  <p className="text-sm text-destructive">{formik.errors.secretCode}</p>
+                ) : null}
+                <p className="text-xs text-muted-foreground">
+                  Enter the secret code you provided during registration.
                 </p>
               </div>
-            )}
 
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              disabled={formik.isSubmitting || isLoading}
-              className="w-full"
-              size="lg"
-            >
-              {formik.isSubmitting || isLoading ? (
-                <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Resetting password...
-                </span>
-              ) : (
-                'Reset Password'
+              {/* New Password Field */}
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">
+                  New Password <span className="text-destructive">*</span>
+                </Label>
+                <PasswordInput
+                  id="newPassword"
+                  name="newPassword"
+                  placeholder="Enter new password (min 6 characters)"
+                  value={formik.values.newPassword}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  aria-invalid={formik.touched.newPassword && formik.errors.newPassword ? 'true' : 'false'}
+                />
+                {formik.touched.newPassword && formik.errors.newPassword ? (
+                  <p className="text-sm text-destructive">{formik.errors.newPassword}</p>
+                ) : null}
+              </div>
+
+              {/* Confirm Password Field */}
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">
+                  Confirm Password <span className="text-destructive">*</span>
+                </Label>
+                <PasswordInput
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  placeholder="Confirm your new password"
+                  value={formik.values.confirmPassword}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  aria-invalid={formik.touched.confirmPassword && formik.errors.confirmPassword ? 'true' : 'false'}
+                />
+                {formik.touched.confirmPassword && formik.errors.confirmPassword ? (
+                  <p className="text-sm text-destructive">{formik.errors.confirmPassword}</p>
+                ) : null}
+              </div>
+
+              {/* Error Message */}
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    {error?.data?.error || 'An error occurred. Please try again.'}
+                  </AlertDescription>
+                </Alert>
               )}
-            </Button>
-          </form>
 
-          {/* Footer */}
-          <div className="text-center pt-4 border-t border-gray-200">
-            <p className="text-sm text-gray-600">
-              Remember your password?{' '}
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                disabled={formik.isSubmitting || isLoading}
+                className="w-full"
+                size="lg"
+              >
+                {formik.isSubmitting || isLoading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Resetting password...
+                  </>
+                ) : (
+                  'Reset Password'
+                )}
+              </Button>
+            </form>
+
+            {/* Footer */}
+            <div className="mt-6 text-center text-sm pt-4 border-t">
+              <span className="text-muted-foreground">Remember your password? </span>
               <Link
                 to="/login"
-                className="font-medium text-indigo-600 hover:text-indigo-500"
+                className="font-medium text-primary hover:underline"
               >
                 Sign in here
               </Link>
-            </p>
-          </div>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

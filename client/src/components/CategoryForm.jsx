@@ -7,6 +7,7 @@ import {
 } from '../services/categoryApi';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
+import { Label } from './ui/label';
 import { ImageIcon, Upload } from 'lucide-react';
 
 /**
@@ -123,36 +124,36 @@ const CategoryForm = ({ category, onSuccess, onClose }) => {
   const isLoading = isCreating || isUpdating;
 
   return (
-    <form onSubmit={formik.handleSubmit} className="space-y-6 mt-6">
+    <form onSubmit={formik.handleSubmit} className="space-y-6">
       {/* Name Field */}
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-          Category Name <span className="text-red-500">*</span>
-        </label>
+      <div className="space-y-2">
+        <Label htmlFor="name">
+          Category Name <span className="text-destructive">*</span>
+        </Label>
         <Input
           id="name"
           name="name"
           type="text"
           placeholder="Enter category name"
-          className="w-full"
           value={formik.values.name}
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
+          aria-invalid={formik.touched.name && formik.errors.name ? 'true' : 'false'}
         />
         {formik.touched.name && formik.errors.name ? (
-          <p className="mt-1.5 text-sm text-red-600">{formik.errors.name}</p>
+          <p className="text-sm text-destructive">{formik.errors.name}</p>
         ) : null}
       </div>
 
       {/* Image Field */}
-      <div>
-        <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-2">
-          Category Image {!category && <span className="text-red-500">*</span>}
-        </label>
+      <div className="space-y-2">
+        <Label htmlFor="image">
+          Category Image {!category && <span className="text-destructive">*</span>}
+        </Label>
         <div className="space-y-4">
           {/* Image Preview */}
           {imagePreview && (
-            <div className="relative w-full h-48 border-2 border-dashed border-gray-300 rounded-lg overflow-hidden">
+            <div className="relative w-full h-48 border-2 border-dashed border-border rounded-lg overflow-hidden">
               <img
                 src={imagePreview}
                 alt="Preview"
@@ -165,18 +166,18 @@ const CategoryForm = ({ category, onSuccess, onClose }) => {
           <div>
             <label
               htmlFor="image-upload"
-              className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+              className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-accent transition-colors"
             >
               <div className="flex flex-col items-center justify-center pt-5 pb-6">
                 {imagePreview ? (
-                  <Upload className="w-8 h-8 mb-2 text-gray-400" />
+                  <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
                 ) : (
-                  <ImageIcon className="w-8 h-8 mb-2 text-gray-400" />
+                  <ImageIcon className="w-8 h-8 mb-2 text-muted-foreground" />
                 )}
-                <p className="mb-2 text-sm text-gray-500">
+                <p className="mb-2 text-sm text-muted-foreground">
                   <span className="font-semibold">Click to upload</span> or drag and drop
                 </p>
-                <p className="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
+                <p className="text-xs text-muted-foreground">PNG, JPG, GIF up to 5MB</p>
               </div>
               <input
                 id="image-upload"
@@ -189,21 +190,14 @@ const CategoryForm = ({ category, onSuccess, onClose }) => {
           </div>
         </div>
         {formik.touched.image && formik.errors.image ? (
-          <p className="mt-1.5 text-sm text-red-600">{formik.errors.image}</p>
+          <p className="text-sm text-destructive">{formik.errors.image}</p>
         ) : null}
         {category && !selectedFile && (
-          <p className="mt-1.5 text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             Leave empty to keep current image
           </p>
         )}
       </div>
-
-      {/* Error Message */}
-      {formik.errors.name && formik.touched.name && (
-        <div className="rounded-lg bg-red-50 border border-red-200 p-4">
-          <p className="text-sm text-red-800">{formik.errors.name}</p>
-        </div>
-      )}
 
       {/* Submit Buttons */}
       <div className="flex gap-3 pt-4">
@@ -222,13 +216,13 @@ const CategoryForm = ({ category, onSuccess, onClose }) => {
           disabled={isLoading || formik.isSubmitting}
         >
           {isLoading ? (
-            <span className="flex items-center justify-center">
-              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <>
+              <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
               {category ? 'Updating...' : 'Creating...'}
-            </span>
+            </>
           ) : (
             category ? 'Update Category' : 'Create Category'
           )}

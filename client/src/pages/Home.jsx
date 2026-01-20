@@ -2,45 +2,53 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { selectIsAuthenticated, selectCurrentUser } from '../store/authSlice'
+import { Button } from '../components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 
 const Home = () => {
   const isAuthenticated = useSelector(selectIsAuthenticated)
   const user = useSelector(selectCurrentUser)
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          Mobile Repairing Company Management System
-        </h1>
-        {isAuthenticated ? (
-          <div>
-            <p className="text-lg text-gray-600 mb-4">
-              Welcome back, {user?.name}!
-            </p>
-            <Link
-              to="/dashboard"
-              className="inline-block bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-500 transition"
-            >
-              Go to Dashboard
-            </Link>
-          </div>
-        ) : (
-          <div className="space-x-4">
-            <Link
-              to="/login"
-              className="inline-block bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-500 transition"
-            >
-              Login
-            </Link>
-            <Link
-              to="/register"
-              className="inline-block bg-gray-600 text-white px-6 py-3 rounded-md hover:bg-gray-500 transition"
-            >
-              Register
-            </Link>
-          </div>
-        )}
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="max-w-2xl w-full">
+        <Card>
+          <CardHeader className="text-center space-y-2">
+            <CardTitle className="text-4xl font-bold">
+              Mobile Repairing Company Management System
+            </CardTitle>
+            <CardDescription className="text-lg">
+              PlusProtech Dashboard
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            {isAuthenticated ? (
+              <div className="space-y-4">
+                <p className="text-lg text-muted-foreground">
+                  Welcome back, {user?.name}!
+                </p>
+                <Button asChild size="lg">
+                  <Link to="/dashboard">
+                    Go to Dashboard
+                  </Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="flex gap-4 justify-center">
+                <Button asChild size="lg">
+                  <Link to="/login">
+                    Login
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link to="/register">
+                    Register
+                  </Link>
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

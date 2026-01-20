@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useGetCategoriesQuery, useDeleteCategoryMutation } from '../services/categoryApi';
 import { Button } from '../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../components/ui/sheet';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from '../components/ui/sheet';
 import { Input } from '../components/ui/input';
+import { Skeleton } from '../components/ui/skeleton';
 import { Plus, Edit, Trash2, Image as ImageIcon } from 'lucide-react';
 import CategoryForm from '../components/CategoryForm';
 import DeleteConfirmationDialog from '../components/DeleteConfirmationDialog';
@@ -63,9 +64,29 @@ const Categories = () => {
 
   if (isLoading) {
     return (
-      <div className="p-6">
-        <div className="flex items-center justify-center h-64">
-          <p className="text-gray-500">Loading categories...</p>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-9 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <Skeleton className="h-10 w-40" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {[...Array(8)].map((_, i) => (
+            <Card key={i}>
+              <Skeleton className="h-48 w-full" />
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-2">
+                  <Skeleton className="h-9 flex-1" />
+                  <Skeleton className="h-9 flex-1" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     );
@@ -73,10 +94,20 @@ const Categories = () => {
 
   if (error) {
     return (
-      <div className="p-6">
-        <div className="flex items-center justify-center h-64">
-          <p className="text-red-500">Error loading categories</p>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-9 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <Skeleton className="h-10 w-40" />
         </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Error</CardTitle>
+            <CardDescription>Failed to load categories. Please try again later.</CardDescription>
+          </CardHeader>
+        </Card>
       </div>
     );
   }
@@ -84,12 +115,12 @@ const Categories = () => {
   const categories = data?.data?.categories || [];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header with Add Button */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Categories</h1>
-          <p className="text-gray-600 mt-1">Manage your product categories</p>
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight">Categories</h1>
+          <p className="text-muted-foreground">Manage your product categories</p>
         </div>
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
           <SheetTrigger asChild>
@@ -98,35 +129,54 @@ const Categories = () => {
               Add New Category
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-full sm:max-w-lg">
-            <SheetHeader>
+          <SheetContent side="right" className="w-full sm:max-w-lg flex flex-col p-0">
+            <SheetHeader className="px-6 pt-6 pb-4">
               <SheetTitle>
                 {editingCategory ? 'Edit Category' : 'Add New Category'}
               </SheetTitle>
+              <SheetDescription>
+                {editingCategory 
+                  ? 'Update the category details below.' 
+                  : 'Fill in the details to create a new category.'}
+              </SheetDescription>
             </SheetHeader>
-            <CategoryForm
-              category={editingCategory}
-              onSuccess={handleSuccess}
-              onClose={handleClose}
-            />
+            <div className="flex-1 overflow-y-auto px-6 pb-6">
+              <CategoryForm
+                category={editingCategory}
+                onSuccess={handleSuccess}
+                onClose={handleClose}
+              />
+            </div>
           </SheetContent>
         </Sheet>
       </div>
 
       {/* Categories Grid */}
       {categories.length === 0 ? (
-        <div className="flex items-center justify-center h-64 border-2 border-dashed border-gray-300 rounded-lg">
-          <div className="text-center">
-            <ImageIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <p className="mt-4 text-gray-500">No categories found</p>
-            <p className="text-sm text-gray-400">Add your first category to get started</p>
-          </div>
-        </div>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <div className="rounded-full bg-muted p-3 mb-4">
+              <ImageIcon className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">No categories found</h3>
+            <p className="text-sm text-muted-foreground text-center max-w-sm">
+              Get started by creating your first category
+            </p>
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => setIsSheetOpen(true)}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Category
+            </Button>
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {categories.map((category) => (
-            <Card key={category._id} className="overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="relative h-48 bg-gray-100">
+            <Card key={category._id} className="overflow-hidden hover:shadow-md transition-shadow">
+              <div className="relative h-48 bg-muted">
                 {getImageUrl(category.image) ? (
                   <img
                     src={getImageUrl(category.image)}
@@ -135,7 +185,7 @@ const Categories = () => {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <ImageIcon className="h-12 w-12 text-gray-400" />
+                    <ImageIcon className="h-12 w-12 text-muted-foreground" />
                   </div>
                 )}
               </div>
