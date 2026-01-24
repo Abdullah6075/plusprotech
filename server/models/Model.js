@@ -18,6 +18,11 @@ const modelSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Model image is required'],
       trim: true
+    },
+    categoryId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Category',
+      required: [true, 'Category ID is required']
     }
   },
   {

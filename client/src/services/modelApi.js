@@ -8,10 +8,16 @@ export const modelApi = api.injectEndpoints({
   endpoints: (builder) => ({
     /**
      * Get all models
+     * @param {Object} params - Query parameters { categoryId }
      * @returns {Promise} Models array
      */
     getModels: builder.query({
-      query: () => '/models',
+      query: (params = {}) => {
+        const queryParams = new URLSearchParams();
+        if (params.categoryId) queryParams.append('categoryId', params.categoryId);
+        const queryString = queryParams.toString();
+        return `/models${queryString ? `?${queryString}` : ''}`;
+      },
       providesTags: ['Model'],
     }),
 

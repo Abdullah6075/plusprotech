@@ -1,4 +1,5 @@
 import Model from '../models/Model.js';
+import Category from '../models/Category.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -18,13 +19,24 @@ const __dirname = path.dirname(__filename);
  */
 export const createModel = async (req, res, next) => {
   try {
-    const { name } = req.body;
+    const { name, categoryId } = req.body;
 
     // Check if image was uploaded
     if (!req.file) {
       return res.status(400).json({
         success: false,
         error: 'Model image is required'
+      });
+    }
+
+    // Validate that category exists
+    const category = await Category.findById(categoryId);
+    if (!category) {
+      // Delete uploaded file if category doesn't exist
+      fs.unlinkSync(req.file.path);
+      return res.status(400).json({
+        success: false,
+        error: 'Category not found'
       });
     }
 
@@ -39,11 +51,15 @@ export const createModel = async (req, res, next) => {
       });
     }
 
-    // Create model with image path
+    // Create model with image path and category
     const model = await Model.create({
       name: name.trim(),
-      image: `/uploads/models/${req.file.filename}`
+      image: `/uploads/models/${req.file.filename}`,
+      categoryId
     });
+
+    // Populate category reference
+    await model.populate('categoryId', 'name image');
 
     res.status(201).json({
       success: true,
@@ -66,11 +82,22 @@ export const createModel = async (req, res, next) => {
  * @desc    Get all models
  * @access  Public
  * 
+ * @query   {String} categoryId - Filter by category ID (optional)
+ * 
  * @returns {Object} success, data: { models }
  */
 export const getAllModels = async (req, res, next) => {
   try {
-    const models = await Model.find().sort({ createdAt: -1 });
+    const { categoryId } = req.query;
+    const filter = {};
+
+    if (categoryId) {
+      filter.categoryId = categoryId;
+    }
+
+    const models = await Model.find(filter)
+      .populate('categoryId', 'name image')
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
@@ -94,7 +121,8 @@ export const getAllModels = async (req, res, next) => {
  */
 export const getModelById = async (req, res, next) => {
   try {
-    const model = await Model.findById(req.params.id);
+    const model = await Model.findById(req.params.id)
+      .populate('categoryId', 'name image');
 
     if (!model) {
       return res.status(404).json({
@@ -127,7 +155,7 @@ export const getModelById = async (req, res, next) => {
  */
 export const updateModel = async (req, res, next) => {
   try {
-    const { name } = req.body;
+    const { name, categoryId } = req.body;
     const model = await Model.findById(req.params.id);
 
     if (!model) {
@@ -139,6 +167,21 @@ export const updateModel = async (req, res, next) => {
         success: false,
         error: 'Model not found'
       });
+    }
+
+    // Validate category if categoryId is being updated
+    if (categoryId) {
+      const category = await Category.findById(categoryId);
+      if (!category) {
+        // Delete uploaded file if category doesn't exist
+        if (req.file) {
+          fs.unlinkSync(req.file.path);
+        }
+        return res.status(400).json({
+          success: false,
+          error: 'Category not found'
+        });
+      }
     }
 
     // Update name if provided
@@ -163,6 +206,11 @@ export const updateModel = async (req, res, next) => {
       model.name = name.trim();
     }
 
+    // Update category if provided
+    if (categoryId) {
+      model.categoryId = categoryId;
+    }
+
     // Update image if new one is uploaded
     if (req.file) {
       // Delete old image file
@@ -176,6 +224,9 @@ export const updateModel = async (req, res, next) => {
     }
 
     await model.save();
+
+    // Populate category reference
+    await model.populate('categoryId', 'name image');
 
     res.status(200).json({
       success: true,

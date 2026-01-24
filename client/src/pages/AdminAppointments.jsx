@@ -1,5 +1,5 @@
-import React from 'react';
-import { useGetAppointmentsQuery, useDeleteAppointmentMutation } from '../services/appointmentApi';
+import React, { useState } from 'react';
+import { useGetAppointmentsQuery, useUpdateAppointmentMutation, useDeleteAppointmentMutation } from '../services/appointmentApi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -13,14 +13,14 @@ import {
   SelectValue,
 } from '../components/ui/select';
 import { Calendar, Trash2, Package, User, DollarSign, Search, X } from 'lucide-react';
+import { Label } from '../components/ui/label';
 import DeleteConfirmationDialog from '../components/DeleteConfirmationDialog';
-import { useState } from 'react';
 
 /**
- * Appointments Page (Customer View)
- * Shows appointments created by the logged-in customer
+ * Admin Appointments Page
+ * Shows all appointments with ability to update status
  */
-const Appointments = () => {
+const AdminAppointments = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
@@ -38,6 +38,7 @@ const Appointments = () => {
     status: statusFilter !== 'all' ? statusFilter : undefined,
     search: debouncedSearchQuery.trim() || undefined,
   });
+  const [updateAppointment] = useUpdateAppointmentMutation();
   const [deleteAppointment, { isLoading: isDeleting }] = useDeleteAppointmentMutation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [appointmentToDelete, setAppointmentToDelete] = useState(null);
@@ -47,6 +48,15 @@ const Appointments = () => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath;
     return `${BASE_URL.replace('/api', '')}${imagePath}`;
+  };
+
+  const handleStatusChange = async (appointmentId, newStatus) => {
+    try {
+      await updateAppointment({ id: appointmentId, status: newStatus }).unwrap();
+    } catch (err) {
+      console.error('Update error:', err);
+      alert(err?.data?.error || 'Failed to update appointment status');
+    }
   };
 
   const handleDeleteClick = (appointment) => {
@@ -70,13 +80,13 @@ const Appointments = () => {
   const getStatusBadgeVariant = (status) => {
     switch (status) {
       case 'confirmed':
-        return 'default'; // Blue/primary
+        return 'default';
       case 'in-progress':
-        return 'secondary'; // Gray
+        return 'secondary';
       case 'completed':
-        return 'default'; // Green (we'll use custom class)
+        return 'default';
       case 'cancelled':
-        return 'destructive'; // Red
+        return 'destructive';
       default:
         return 'outline';
     }
@@ -126,8 +136,8 @@ const Appointments = () => {
     return (
       <div className="space-y-6">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight">Appointments</h1>
-          <p className="text-muted-foreground">Manage your appointments</p>
+          <h1 className="text-3xl font-bold tracking-tight">All Appointments</h1>
+          <p className="text-muted-foreground">Manage all customer appointments</p>
         </div>
         <Card>
           <CardHeader>
@@ -145,8 +155,8 @@ const Appointments = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">My Appointments</h1>
-        <p className="text-muted-foreground">View and manage your scheduled appointments</p>
+        <h1 className="text-3xl font-bold tracking-tight">All Appointments</h1>
+        <p className="text-muted-foreground">Manage all customer appointments</p>
       </div>
 
       {/* Filters and Search */}
@@ -154,7 +164,7 @@ const Appointments = () => {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search appointments..."
+            placeholder="Search by name, email, phone, title..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -191,7 +201,7 @@ const Appointments = () => {
             </div>
             <h3 className="text-lg font-semibold mb-2">No appointments found</h3>
             <p className="text-sm text-muted-foreground text-center max-w-sm">
-              You haven't scheduled any appointments yet. Browse categories to get started.
+              No appointments have been scheduled yet.
             </p>
           </CardContent>
         </Card>
@@ -215,8 +225,24 @@ const Appointments = () => {
                   </CardDescription>
                 )}
               </CardHeader>
-              <CardContent className="pt-0 space-y-2">
+              <CardContent className="pt-0 space-y-3">
                 <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm">
+                  <div className="flex items-center gap-1">
+                    <User className="h-3 w-3 text-muted-foreground shrink-0" />
+                    <span className="text-muted-foreground truncate">Customer:</span>
+                  </div>
+                  <span className="font-medium truncate">{appointment.name || appointment.customerId?.name || 'Guest'}</span>
+                  
+                  <div className="flex items-center gap-1">
+                    <span className="text-muted-foreground">Email:</span>
+                  </div>
+                  <span className="font-medium truncate text-xs">{appointment.contactEmail || appointment.customerId?.email || 'N/A'}</span>
+                  
+                  <div className="flex items-center gap-1">
+                    <span className="text-muted-foreground">Phone:</span>
+                  </div>
+                  <span className="font-medium truncate">{appointment.contactPhone || appointment.customerId?.contactNumber || 'N/A'}</span>
+                  
                   <div className="flex items-center gap-1">
                     <Package className="h-3 w-3 text-muted-foreground shrink-0" />
                     <span className="text-muted-foreground truncate">Model:</span>
@@ -252,17 +278,34 @@ const Appointments = () => {
                   <div className="text-muted-foreground">Time:</div>
                   <span className="font-medium text-xs">{appointment.time || 'N/A'}</span>
                 </div>
-                {appointment.status === 'confirmed' && (
+                <div className="space-y-2 pt-2 border-t">
+                  <div className="space-y-1">
+                    <Label className="text-xs sm:text-sm">Update Status</Label>
+                    <Select
+                      value={appointment.status}
+                      onValueChange={(value) => handleStatusChange(appointment._id, value)}
+                    >
+                      <SelectTrigger className="h-8 text-xs sm:text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="confirmed">Confirmed</SelectItem>
+                        <SelectItem value="in-progress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <Button
                     variant="destructive"
                     size="sm"
-                    className="w-full mt-3 text-xs sm:text-sm"
+                    className="w-full text-xs sm:text-sm h-8"
                     onClick={() => handleDeleteClick(appointment)}
                   >
                     <Trash2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                    Cancel
+                    Delete
                   </Button>
-                )}
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -274,8 +317,8 @@ const Appointments = () => {
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         onConfirm={handleDeleteConfirm}
-        title="Cancel Appointment"
-        description="Are you sure you want to cancel this appointment? This action cannot be undone."
+        title="Delete Appointment"
+        description="Are you sure you want to delete this appointment? This action cannot be undone."
         itemName={appointmentToDelete?.title}
         isLoading={isDeleting}
       />
@@ -283,4 +326,4 @@ const Appointments = () => {
   );
 };
 
-export default Appointments;
+export default AdminAppointments;

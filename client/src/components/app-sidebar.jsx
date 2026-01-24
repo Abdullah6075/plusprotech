@@ -55,6 +55,11 @@ const getNavLinksByRole = (role) => {
         url: "/dashboard/model-services",
         icon: Package,
       },
+      {
+        name: "Appointments",
+        url: "/dashboard/admin-appointments",
+        icon: Calendar,
+      },
     ];
   }
   if (role === "customer") {

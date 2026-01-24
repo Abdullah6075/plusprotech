@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../co
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from '../components/ui/sheet';
 import { Skeleton } from '../components/ui/skeleton';
 import { Plus, Edit, Trash2, Image as ImageIcon } from 'lucide-react';
+import { Badge } from '../components/ui/badge';
 import ModelForm from '../components/ModelForm';
 import DeleteConfirmationDialog from '../components/DeleteConfirmationDialog';
 
@@ -189,6 +190,13 @@ const Models = () => {
               </div>
               <CardHeader>
                 <CardTitle className="text-lg">{model.name}</CardTitle>
+                {model.categoryId && (
+                  <div className="mt-2">
+                    <Badge variant="outline">
+                      {model.categoryId?.name || 'N/A'}
+                    </Badge>
+                  </div>
+                )}
               </CardHeader>
               <CardContent>
                 <div className="flex gap-2">

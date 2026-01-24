@@ -20,6 +20,12 @@ export const createModelValidation = Joi.object({
       'string.min': 'Model name must be at least 2 characters',
       'string.max': 'Model name cannot exceed 50 characters',
       'any.required': 'Model name is required'
+    }),
+  categoryId: Joi.string()
+    .required()
+    .messages({
+      'string.empty': 'Category ID is required',
+      'any.required': 'Category ID is required'
     })
 });
 
@@ -34,5 +40,9 @@ export const updateModelValidation = Joi.object({
     .messages({
       'string.min': 'Model name must be at least 2 characters',
       'string.max': 'Model name cannot exceed 50 characters'
+    }),
+  categoryId: Joi.string()
+    .messages({
+      'string.empty': 'Category ID is required'
     })
 });

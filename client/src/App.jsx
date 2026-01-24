@@ -12,7 +12,10 @@ import Services from './pages/Services'
 import Models from './pages/Models'
 import ModelServices from './pages/ModelServices'
 import Appointments from './pages/Appointments'
+import ModelsByCategory from './pages/ModelsByCategory'
+import AdminAppointments from './pages/AdminAppointments'
 import ProtectedRoute from './components/ProtectedRoute'
+import Navbar from './components/Navbar'
 
 /**
  * Public Route Component
@@ -46,9 +49,11 @@ const DashboardRedirect = () => {
 const App = () => {
   return (
     <BrowserRouter>
+    <Navbar />
       <Routes>
         {/* Public routes */}
         <Route path='/' element={<Home />} />
+        <Route path='/category/:categoryId' element={<ModelsByCategory />} />
         <Route 
           path='/login' 
           element={
@@ -89,6 +94,7 @@ const App = () => {
           <Route path='models' element={<Models />} />
           <Route path='model-services' element={<ModelServices />} />
           <Route path='appointments' element={<Appointments />} />
+          <Route path='admin-appointments' element={<AdminAppointments />} />
         </Route>
         
         {/* Catch all - redirect to home */}

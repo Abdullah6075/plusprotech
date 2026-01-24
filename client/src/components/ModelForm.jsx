@@ -5,9 +5,17 @@ import {
   useCreateModelMutation,
   useUpdateModelMutation,
 } from '../services/modelApi';
+import { useGetCategoriesQuery } from '../services/categoryApi';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 import { ImageIcon, Upload } from 'lucide-react';
 
 /**
@@ -17,8 +25,11 @@ import { ImageIcon, Upload } from 'lucide-react';
 const ModelForm = ({ model, onSuccess, onClose }) => {
   const [createModel, { isLoading: isCreating }] = useCreateModelMutation();
   const [updateModel, { isLoading: isUpdating }] = useUpdateModelMutation();
+  const { data: categoriesData } = useGetCategoriesQuery();
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
+
+  const categories = categoriesData?.data?.categories || [];
 
   const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
   const getImageUrl = (imagePath) => {
@@ -31,6 +42,7 @@ const ModelForm = ({ model, onSuccess, onClose }) => {
     if (model) {
       formik.setValues({
         name: model.name || '',
+        categoryId: model.categoryId?._id || model.categoryId || '',
       });
       if (model.image) {
         setImagePreview(getImageUrl(model.image));
@@ -45,17 +57,21 @@ const ModelForm = ({ model, onSuccess, onClose }) => {
   const formik = useFormik({
     initialValues: {
       name: '',
+      categoryId: '',
     },
     validationSchema: Yup.object({
       name: Yup.string()
         .min(2, 'Model name must be at least 2 characters')
         .max(50, 'Model name cannot exceed 50 characters')
         .required('Model name is required'),
+      categoryId: Yup.string()
+        .required('Category is required'),
     }),
     onSubmit: async (values, { setSubmitting, setFieldError }) => {
       try {
         const formData = new FormData();
         formData.append('name', values.name.trim());
+        formData.append('categoryId', values.categoryId);
 
         // Only append image if it's a new file (not editing with existing image)
         if (selectedFile) {
@@ -81,7 +97,7 @@ const ModelForm = ({ model, onSuccess, onClose }) => {
         if (err?.data?.errors && Array.isArray(err.data.errors)) {
           err.data.errors.forEach((validationError) => {
             const fieldName = validationError.field;
-            if (['name', 'image'].includes(fieldName)) {
+            if (['name', 'image', 'categoryId'].includes(fieldName)) {
               setFieldError(fieldName, validationError.message);
             }
           });
@@ -125,6 +141,31 @@ const ModelForm = ({ model, onSuccess, onClose }) => {
 
   return (
     <form onSubmit={formik.handleSubmit} className="space-y-6">
+      {/* Category Field */}
+      <div className="space-y-2">
+        <Label htmlFor="categoryId">
+          Category <span className="text-destructive">*</span>
+        </Label>
+        <Select
+          value={formik.values.categoryId}
+          onValueChange={(value) => formik.setFieldValue('categoryId', value)}
+        >
+          <SelectTrigger id="categoryId" aria-invalid={formik.touched.categoryId && formik.errors.categoryId ? 'true' : 'false'}>
+            <SelectValue placeholder="Select a category" />
+          </SelectTrigger>
+          <SelectContent>
+            {categories.map((category) => (
+              <SelectItem key={category._id} value={category._id}>
+                {category.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {formik.touched.categoryId && formik.errors.categoryId ? (
+          <p className="text-sm text-destructive">{formik.errors.categoryId}</p>
+        ) : null}
+      </div>
+
       {/* Name Field */}
       <div className="space-y-2">
         <Label htmlFor="name">
