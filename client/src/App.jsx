@@ -14,6 +14,7 @@ import ModelServices from './pages/ModelServices'
 import Appointments from './pages/Appointments'
 import ModelsByCategory from './pages/ModelsByCategory'
 import AdminAppointments from './pages/AdminAppointments'
+import Inventory from './pages/Inventory'
 import ProtectedRoute from './components/ProtectedRoute'
 import Navbar from './components/Navbar'
 
@@ -93,6 +94,7 @@ const App = () => {
           <Route path='services' element={<Services />} />
           <Route path='models' element={<Models />} />
           <Route path='model-services' element={<ModelServices />} />
+          <Route path='inventory' element={<Inventory />} />
           <Route path='appointments' element={<Appointments />} />
           <Route path='admin-appointments' element={<AdminAppointments />} />
         </Route>

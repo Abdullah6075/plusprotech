@@ -14,6 +14,8 @@ import {
 } from '../components/ui/select';
 import { Calendar, Trash2, Package, User, DollarSign, Search, X } from 'lucide-react';
 import DeleteConfirmationDialog from '../components/DeleteConfirmationDialog';
+import InvoiceDisplay from '../components/InvoiceDisplay';
+import InvoiceButton from '../components/InvoiceButton';
 import { useState } from 'react';
 
 /**
@@ -41,6 +43,8 @@ const Appointments = () => {
   const [deleteAppointment, { isLoading: isDeleting }] = useDeleteAppointmentMutation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [appointmentToDelete, setAppointmentToDelete] = useState(null);
+  const [invoiceDisplayOpen, setInvoiceDisplayOpen] = useState(false);
+  const [appointmentForInvoice, setAppointmentForInvoice] = useState(null);
 
   const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
   const getImageUrl = (imagePath) => {
@@ -65,6 +69,11 @@ const Appointments = () => {
       console.error('Delete error:', err);
       alert(err?.data?.error || 'Failed to delete appointment');
     }
+  };
+
+  const handleViewInvoice = (appointment) => {
+    setAppointmentForInvoice(appointment);
+    setInvoiceDisplayOpen(true);
   };
 
   const getStatusBadgeVariant = (status) => {
@@ -252,17 +261,24 @@ const Appointments = () => {
                   <div className="text-muted-foreground">Time:</div>
                   <span className="font-medium text-xs">{appointment.time || 'N/A'}</span>
                 </div>
-                {appointment.status === 'confirmed' && (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    className="w-full mt-3 text-xs sm:text-sm"
-                    onClick={() => handleDeleteClick(appointment)}
-                  >
-                    <Trash2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                    Cancel
-                  </Button>
-                )}
+                <div className="space-y-2 mt-3">
+                  <InvoiceButton
+                    appointment={appointment}
+                    onViewInvoice={handleViewInvoice}
+                    showForAllStatuses={true}
+                  />
+                  {appointment.status === 'confirmed' && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="w-full text-xs sm:text-sm"
+                      onClick={() => handleDeleteClick(appointment)}
+                    >
+                      <Trash2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                      Cancel
+                    </Button>
+                  )}
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -279,6 +295,15 @@ const Appointments = () => {
         itemName={appointmentToDelete?.title}
         isLoading={isDeleting}
       />
+
+      {/* Invoice Display Dialog */}
+      {appointmentForInvoice && (
+        <InvoiceDisplay
+          open={invoiceDisplayOpen}
+          onOpenChange={setInvoiceDisplayOpen}
+          appointment={appointmentForInvoice}
+        />
+      )}
     </div>
   );
 };

@@ -17,6 +17,7 @@ import {
   Wrench,
   Smartphone,
   Package,
+  Warehouse,
 } from "lucide-react";
 
 import { NavProjects } from "@/components/nav-projects";
@@ -54,6 +55,11 @@ const getNavLinksByRole = (role) => {
         name: "Model Services",
         url: "/dashboard/model-services",
         icon: Package,
+      },
+      {
+        name: "Inventory",
+        url: "/dashboard/inventory",
+        icon: Warehouse,
       },
       {
         name: "Appointments",

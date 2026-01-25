@@ -12,9 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select';
-import { Calendar, Trash2, Package, User, DollarSign, Search, X } from 'lucide-react';
+import { Calendar, Trash2, Package, User, DollarSign, Search, X, FileText, Printer } from 'lucide-react';
 import { Label } from '../components/ui/label';
 import DeleteConfirmationDialog from '../components/DeleteConfirmationDialog';
+import InvoiceCreationDialog from '../components/InvoiceCreationDialog';
+import InvoiceDisplay from '../components/InvoiceDisplay';
+import InvoiceButton from '../components/InvoiceButton';
 
 /**
  * Admin Appointments Page
@@ -42,6 +45,10 @@ const AdminAppointments = () => {
   const [deleteAppointment, { isLoading: isDeleting }] = useDeleteAppointmentMutation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [appointmentToDelete, setAppointmentToDelete] = useState(null);
+  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [invoiceDisplayOpen, setInvoiceDisplayOpen] = useState(false);
+  const [appointmentForInvoice, setAppointmentForInvoice] = useState(null);
 
   const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
   const getImageUrl = (imagePath) => {
@@ -75,6 +82,21 @@ const AdminAppointments = () => {
       console.error('Delete error:', err);
       alert(err?.data?.error || 'Failed to delete appointment');
     }
+  };
+
+  const handleCreateInvoice = (appointment) => {
+    setSelectedAppointment(appointment);
+    setInvoiceDialogOpen(true);
+  };
+
+  const handleViewInvoice = (appointment) => {
+    setAppointmentForInvoice(appointment);
+    setInvoiceDisplayOpen(true);
+  };
+
+  const handleInvoiceSuccess = () => {
+    setInvoiceDialogOpen(false);
+    setSelectedAppointment(null);
   };
 
   const getStatusBadgeVariant = (status) => {
@@ -296,6 +318,11 @@ const AdminAppointments = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  <InvoiceButton
+                    appointment={appointment}
+                    onCreateInvoice={handleCreateInvoice}
+                    onViewInvoice={handleViewInvoice}
+                  />
                   <Button
                     variant="destructive"
                     size="sm"
@@ -322,6 +349,25 @@ const AdminAppointments = () => {
         itemName={appointmentToDelete?.title}
         isLoading={isDeleting}
       />
+
+      {/* Invoice Creation Dialog */}
+      {selectedAppointment && (
+        <InvoiceCreationDialog
+          open={invoiceDialogOpen}
+          onOpenChange={setInvoiceDialogOpen}
+          appointment={selectedAppointment}
+          onSuccess={handleInvoiceSuccess}
+        />
+      )}
+
+      {/* Invoice Display Dialog */}
+      {appointmentForInvoice && (
+        <InvoiceDisplay
+          open={invoiceDisplayOpen}
+          onOpenChange={setInvoiceDisplayOpen}
+          appointment={appointmentForInvoice}
+        />
+      )}
     </div>
   );
 };

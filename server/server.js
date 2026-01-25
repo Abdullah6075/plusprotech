@@ -11,6 +11,8 @@ import serviceRoutes from './routes/serviceRoutes.js';
 import modelRoutes from './routes/modelRoutes.js';
 import modelServiceRoutes from './routes/modelServiceRoutes.js';
 import appointmentRoutes from './routes/appointmentRoutes.js';
+import inventoryRoutes from './routes/inventoryRoutes.js';
+import invoiceRoutes from './routes/invoiceRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -100,6 +102,8 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/models', modelRoutes);
 app.use('/api/model-services', modelServiceRoutes);
 app.use('/api/appointments', appointmentRoutes);
+app.use('/api/inventory', inventoryRoutes);
+app.use('/api/invoices', invoiceRoutes);
 
 // 404 handler for undefined routes
 // In Express 5, wildcard routes must have a named parameter
