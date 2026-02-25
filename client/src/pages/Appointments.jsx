@@ -60,7 +60,10 @@ const Appointments = () => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath;
-    return `${BASE_URL.replace('/api', '')}${imagePath}`;
+    const baseUrl = BASE_URL.endsWith('/api')
+      ? BASE_URL.slice(0, -4)
+      : BASE_URL;
+    return `${baseUrl}${imagePath}`;
   };
 
   const handleDeleteClick = (appointment) => {

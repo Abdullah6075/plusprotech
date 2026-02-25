@@ -10,8 +10,11 @@ const ServiceSection = () => {
     const getImageUrl = (imagePath) => {
         if (!imagePath) return null;
         if (imagePath.startsWith('http')) return imagePath;
-        return `${BASE_URL.replace('/api', '')}${imagePath}`;
-    };
+        const baseUrl = BASE_URL.endsWith('/api')
+          ? BASE_URL.slice(0, -4)
+          : BASE_URL;
+        return `${baseUrl}${imagePath}`;
+      };
     return (
         <section id="services" className='container flex flex-col gap-10 pt-36'>
             <div className="flex flex-col md:flex-row justify-between md:items-center items-start gap-2">
