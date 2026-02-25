@@ -17,9 +17,9 @@ import PaginationControls from '../components/PaginationControls';
 const Categories = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
-  const { data, isLoading, error } = useGetCategoriesQuery({ 
-    page: currentPage, 
-    limit: itemsPerPage 
+  const { data, isLoading, error } = useGetCategoriesQuery({
+    page: currentPage,
+    limit: itemsPerPage
   });
   const [deleteCategory, { isLoading: isDeleting }] = useDeleteCategoryMutation();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -60,7 +60,10 @@ const Categories = () => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath;
-    return `${BASE_URL.replace('/api', '')}${imagePath}`;
+    const baseUrl = BASE_URL.endsWith('/api')
+      ? BASE_URL.slice(0, -4)
+      : BASE_URL;
+    return `${baseUrl}${imagePath}`;
   };
 
   if (isLoading) {
@@ -151,8 +154,8 @@ const Categories = () => {
                 {editingCategory ? 'Edit Category' : 'Add New Category'}
               </SheetTitle>
               <SheetDescription>
-                {editingCategory 
-                  ? 'Update the category details below.' 
+                {editingCategory
+                  ? 'Update the category details below.'
                   : 'Fill in the details to create a new category.'}
               </SheetDescription>
             </SheetHeader>
