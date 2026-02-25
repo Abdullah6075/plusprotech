@@ -14,41 +14,48 @@ import {
 } from '../components/ui/select';
 import { Calendar, Trash2, Package, User, DollarSign, Search, X, FileText, Printer } from 'lucide-react';
 import { Label } from '../components/ui/label';
+import { useNavigate } from 'react-router-dom';
 import DeleteConfirmationDialog from '../components/DeleteConfirmationDialog';
-import InvoiceCreationDialog from '../components/InvoiceCreationDialog';
-import InvoiceDisplay from '../components/InvoiceDisplay';
 import InvoiceButton from '../components/InvoiceButton';
+import PaginationControls from '../components/PaginationControls';
 
 /**
  * Admin Appointments Page
  * Shows all appointments with ability to update status
  */
 const AdminAppointments = () => {
+  const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Debounce search query - wait 500ms after user stops typing
   React.useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
+      setCurrentPage(1); // Reset to first page when search changes
     }, 500);
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  // Reset to first page when status filter changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter]);
+
   const { data, isLoading, error } = useGetAppointmentsQuery({
     status: statusFilter !== 'all' ? statusFilter : undefined,
     search: debouncedSearchQuery.trim() || undefined,
+    page: currentPage,
+    limit: itemsPerPage,
   });
   const [updateAppointment] = useUpdateAppointmentMutation();
   const [deleteAppointment, { isLoading: isDeleting }] = useDeleteAppointmentMutation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [appointmentToDelete, setAppointmentToDelete] = useState(null);
-  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
-  const [selectedAppointment, setSelectedAppointment] = useState(null);
-  const [invoiceDisplayOpen, setInvoiceDisplayOpen] = useState(false);
-  const [appointmentForInvoice, setAppointmentForInvoice] = useState(null);
 
   const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
   const getImageUrl = (imagePath) => {
@@ -85,19 +92,13 @@ const AdminAppointments = () => {
   };
 
   const handleCreateInvoice = (appointment) => {
-    setSelectedAppointment(appointment);
-    setInvoiceDialogOpen(true);
+    navigate(`/dashboard/invoices/create/${appointment._id}`);
   };
 
   const handleViewInvoice = (appointment) => {
-    setAppointmentForInvoice(appointment);
-    setInvoiceDisplayOpen(true);
+    navigate(`/dashboard/invoices/view/${appointment._id}`);
   };
 
-  const handleInvoiceSuccess = () => {
-    setInvoiceDialogOpen(false);
-    setSelectedAppointment(null);
-  };
 
   const getStatusBadgeVariant = (status) => {
     switch (status) {
@@ -172,6 +173,12 @@ const AdminAppointments = () => {
   }
 
   const appointments = data?.data?.appointments || [];
+  const pagination = data?.data?.pagination || {};
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="space-y-6">
@@ -339,6 +346,17 @@ const AdminAppointments = () => {
         </div>
       )}
 
+      {/* Pagination */}
+      {pagination.totalPages > 1 && (
+        <PaginationControls
+          currentPage={pagination.currentPage || currentPage}
+          totalPages={pagination.totalPages || 1}
+          totalItems={pagination.totalItems || 0}
+          itemsPerPage={itemsPerPage}
+          onPageChange={handlePageChange}
+        />
+      )}
+
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmationDialog
         open={deleteDialogOpen}
@@ -351,23 +369,8 @@ const AdminAppointments = () => {
       />
 
       {/* Invoice Creation Dialog */}
-      {selectedAppointment && (
-        <InvoiceCreationDialog
-          open={invoiceDialogOpen}
-          onOpenChange={setInvoiceDialogOpen}
-          appointment={selectedAppointment}
-          onSuccess={handleInvoiceSuccess}
-        />
-      )}
 
       {/* Invoice Display Dialog */}
-      {appointmentForInvoice && (
-        <InvoiceDisplay
-          open={invoiceDisplayOpen}
-          onOpenChange={setInvoiceDisplayOpen}
-          appointment={appointmentForInvoice}
-        />
-      )}
     </div>
   );
 };

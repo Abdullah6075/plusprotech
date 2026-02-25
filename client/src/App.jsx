@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { selectIsAuthenticated, selectCurrentUser } from './store/authSlice'
@@ -15,8 +15,14 @@ import Appointments from './pages/Appointments'
 import ModelsByCategory from './pages/ModelsByCategory'
 import AdminAppointments from './pages/AdminAppointments'
 import Inventory from './pages/Inventory'
+import Reviews from './pages/Reviews'
+import ScheduleAppointment from './pages/ScheduleAppointment'
+import ServiceSelection from './pages/ServiceSelection'
+import CreateInvoice from './pages/CreateInvoice'
+import ViewInvoice from './pages/ViewInvoice'
 import ProtectedRoute from './components/ProtectedRoute'
 import Navbar from './components/Navbar'
+import Lenis from 'lenis'
 
 /**
  * Public Route Component
@@ -50,11 +56,13 @@ const DashboardRedirect = () => {
 const App = () => {
   return (
     <BrowserRouter>
-    <Navbar />
+    {/* <Navbar /> */}
       <Routes>
         {/* Public routes */}
         <Route path='/' element={<Home />} />
         <Route path='/category/:categoryId' element={<ModelsByCategory />} />
+        <Route path='/model/:modelId/services' element={<ServiceSelection />} />
+        <Route path='/schedule-appointment/:modelServiceId/:modelId' element={<ScheduleAppointment />} />
         <Route 
           path='/login' 
           element={
@@ -97,6 +105,9 @@ const App = () => {
           <Route path='inventory' element={<Inventory />} />
           <Route path='appointments' element={<Appointments />} />
           <Route path='admin-appointments' element={<AdminAppointments />} />
+          <Route path='reviews' element={<Reviews />} />
+          <Route path='invoices/create/:appointmentId' element={<CreateInvoice />} />
+          <Route path='invoices/view/:appointmentId' element={<ViewInvoice />} />
         </Route>
         
         {/* Catch all - redirect to home */}

@@ -41,19 +41,43 @@ export const createService = async (req, res, next) => {
 
 /**
  * @route   GET /api/services
- * @desc    Get all services
+ * @desc    Get all services with pagination
  * @access  Public
  * 
- * @returns {Object} success, data: { services }
+ * @query   {Number} page - Page number (default: 1)
+ * @query   {Number} limit - Items per page (default: 10)
+ * 
+ * @returns {Object} success, data: { services, pagination }
  */
 export const getAllServices = async (req, res, next) => {
   try {
-    const services = await Service.find().sort({ createdAt: -1 });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Get total count
+    const total = await Service.countDocuments();
+
+    // Get paginated services
+    const services = await Service.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalPages = Math.ceil(total / limit);
 
     res.status(200).json({
       success: true,
       data: {
-        services
+        services,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalItems: total,
+          itemsPerPage: limit,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1
+        }
       }
     });
   } catch (error) {

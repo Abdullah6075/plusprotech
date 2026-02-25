@@ -1,39 +1,43 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useGetInventoryQuery } from '../services/inventoryApi';
 import { useCreateInvoiceMutation } from '../services/invoiceApi';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Badge } from './ui/badge';
-import { Card, CardContent } from './ui/card';
-import { Checkbox } from './ui/checkbox';
-import { Plus, Minus, DollarSign } from 'lucide-react';
+import { useGetAppointmentByIdQuery } from '../services/appointmentApi';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Badge } from '../components/ui/badge';
+import { Card, CardContent } from '../components/ui/card';
+import { Checkbox } from '../components/ui/checkbox';
+import { Plus, Minus, ArrowLeft } from 'lucide-react';
+import { Alert, AlertDescription } from '../components/ui/alert';
+import { CheckCircle2 } from 'lucide-react';
 
 /**
- * Invoice Creation Dialog
+ * Create Invoice Page
  * Allows admin to select inventory items and create invoice for completed appointment
  */
-const InvoiceCreationDialog = ({ open, onOpenChange, appointment, onSuccess }) => {
+const CreateInvoice = () => {
+  const { appointmentId } = useParams();
+  const navigate = useNavigate();
+  const { data: appointmentData } = useGetAppointmentByIdQuery(appointmentId, { skip: !appointmentId });
   const { data: inventoryData } = useGetInventoryQuery();
   const [createInvoice, { isLoading }] = useCreateInvoiceMutation();
   const [selectedItems, setSelectedItems] = useState([]); // [{ inventoryId, quantity }]
   const [description, setDescription] = useState('');
   const [totalPrice, setTotalPrice] = useState(0);
+  const [showSuccess, setShowSuccess] = useState(false);
 
+  const appointment = appointmentData?.data?.appointment;
   const inventory = inventoryData?.data?.inventory || [];
 
   useEffect(() => {
-    if (!open) {
-      setSelectedItems([]);
-      setDescription('');
-      setTotalPrice(0);
-    } else {
+    if (appointment) {
       // Prefill total price with service cost
       const servicePrice = appointment?.modelServiceId?.discountedPrice || appointment?.modelServiceId?.price || 0;
       setTotalPrice(servicePrice);
     }
-  }, [open, appointment]);
+  }, [appointment]);
 
   const handleItemToggle = (item) => {
     const exists = selectedItems.find(si => si.inventoryId === item._id);
@@ -79,7 +83,12 @@ const InvoiceCreationDialog = ({ open, onOpenChange, appointment, onSuccess }) =
         totalPrice: parseFloat(totalPrice),
         description: description.trim() || undefined,
       }).unwrap();
-      onSuccess();
+      
+      setShowSuccess(true);
+      // Redirect after 2 seconds
+      setTimeout(() => {
+        navigate('/dashboard/admin-appointments');
+      }, 2000);
     } catch (err) {
       alert(err?.data?.error || 'Failed to create invoice');
     }
@@ -87,21 +96,53 @@ const InvoiceCreationDialog = ({ open, onOpenChange, appointment, onSuccess }) =
 
   const { servicePrice, total } = calculateTotals();
 
+  if (!appointment) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading appointment details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (showSuccess) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-2xl">
+        <div className="flex flex-col items-center text-center space-y-4 py-12">
+          <div className="rounded-full bg-green-100 p-3">
+            <CheckCircle2 className="h-8 w-8 text-green-600" />
+          </div>
+          <h1 className="text-2xl font-bold">Invoice Created Successfully!</h1>
+          <p className="text-muted-foreground">
+            The invoice has been created and is ready to view.
+          </p>
+          <p className="text-sm text-muted-foreground">Redirecting to appointments...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Create Invoice</DialogTitle>
-          <DialogDescription>
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <Link to="/dashboard/admin-appointments" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6">
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back to Appointments
+      </Link>
+
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Create Invoice</h1>
+          <p className="text-muted-foreground mt-2">
             Select inventory items used for this repair (optional - some repairs may not need items)
-          </DialogDescription>
-        </DialogHeader>
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left: Inventory Items Selection */}
           <div className="space-y-4">
-            <h3 className="font-semibold">Select Items (Optional)</h3>
-            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+            <h3 className="text-lg font-semibold">Select Items (Optional)</h3>
+            <div className="space-y-2 max-h-[500px] overflow-y-auto">
               {inventory.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No inventory items available</p>
               ) : (
@@ -176,7 +217,7 @@ const InvoiceCreationDialog = ({ open, onOpenChange, appointment, onSuccess }) =
 
           {/* Right: Invoice Preview */}
           <div className="space-y-4">
-            <h3 className="font-semibold">Invoice Preview</h3>
+            <h3 className="text-lg font-semibold">Invoice Preview</h3>
             <Card>
               <CardContent className="p-4 space-y-4">
                 {/* Appointment Details */}
@@ -266,29 +307,29 @@ const InvoiceCreationDialog = ({ open, onOpenChange, appointment, onSuccess }) =
                 maxLength={1000}
               />
             </div>
-
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                className="flex-1"
-                disabled={isLoading}
-              >
-                Cancel
-              </Button>
-               <Button
-                 onClick={handleSubmit}
-                 className="flex-1"
-                 disabled={isLoading}
-               >
-                 {isLoading ? 'Creating...' : 'Create Invoice'}
-               </Button>
-            </div>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+
+        <div className="flex gap-3 pt-4 border-t">
+          <Button
+            variant="outline"
+            onClick={() => navigate(-1)}
+            className="flex-1 sm:flex-initial"
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            className="flex-1 sm:flex-initial"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Creating...' : 'Create Invoice'}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
 
-export default InvoiceCreationDialog;
+export default CreateInvoice;

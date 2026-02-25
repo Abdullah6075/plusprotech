@@ -7,11 +7,18 @@ import { api } from './api';
 export const categoryApi = api.injectEndpoints({
   endpoints: (builder) => ({
     /**
-     * Get all categories
-     * @returns {Promise} Categories array
+     * Get all categories with pagination
+     * @param {Object} params - Query parameters { page, limit }
+     * @returns {Promise} Categories array with pagination
      */
     getCategories: builder.query({
-      query: () => '/categories',
+      query: (params = {}) => {
+        const queryParams = new URLSearchParams();
+        if (params.page) queryParams.append('page', params.page);
+        if (params.limit) queryParams.append('limit', params.limit);
+        const queryString = queryParams.toString();
+        return `/categories${queryString ? `?${queryString}` : ''}`;
+      },
       providesTags: ['Category'],
     }),
 

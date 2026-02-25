@@ -4,7 +4,7 @@ import * as Yup from 'yup';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../store/authSlice';
 import { useCreateAppointmentMutation } from '../services/appointmentApi';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogBody, DialogFooter } from './ui/dialog';
 import { Card, CardContent } from './ui/card';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
@@ -120,9 +120,9 @@ const AppointmentForm = ({ open, onOpenChange, modelService, model, onSuccess })
   if (showSuccess) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-lg">
+        <DialogContent size="default">
           <DialogHeader>
-            <div className="flex flex-col items-center text-center space-y-4 py-4">
+            <div className="flex flex-col items-center text-center space-y-4">
               <div className="rounded-full bg-green-100 p-3">
                 <CheckCircle2 className="h-8 w-8 text-green-600" />
               </div>
@@ -139,7 +139,7 @@ const AppointmentForm = ({ open, onOpenChange, modelService, model, onSuccess })
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent size="default">
         <DialogHeader>
           <DialogTitle>Schedule Appointment</DialogTitle>
           <DialogDescription>
@@ -147,7 +147,8 @@ const AppointmentForm = ({ open, onOpenChange, modelService, model, onSuccess })
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <DialogBody>
+          <div className="space-y-4">
           {/* Service Info */}
           <Card>
             <CardContent className="pt-6">
@@ -184,7 +185,8 @@ const AppointmentForm = ({ open, onOpenChange, modelService, model, onSuccess })
           </Card>
 
           {/* Form */}
-          <form onSubmit={formik.handleSubmit} className="space-y-4">
+          <form id="appointment-form" onSubmit={formik.handleSubmit} className="space-y-4">
+            <input type="submit" style={{ display: 'none' }} />
             {/* Contact Information */}
             <div className="space-y-4">
               <h3 className="text-sm font-semibold">Contact Information</h3>
@@ -330,36 +332,43 @@ const AppointmentForm = ({ open, onOpenChange, modelService, model, onSuccess })
               </div>
             </div>
 
-            <div className="flex gap-3 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                className="flex-1"
-                disabled={isLoading}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="flex-1"
-                disabled={isLoading || formik.isSubmitting}
-              >
-                {isLoading ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Scheduling...
-                  </>
-                ) : (
-                  'Schedule Appointment'
-                )}
-              </Button>
-            </div>
           </form>
-        </div>
+          </div>
+        </DialogBody>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="flex-1 sm:flex-initial"
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            form="appointment-form"
+            className="flex-1 sm:flex-initial"
+            disabled={isLoading || formik.isSubmitting}
+            onClick={(e) => {
+              e.preventDefault();
+              formik.handleSubmit();
+            }}
+          >
+            {isLoading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Scheduling...
+              </>
+            ) : (
+              'Schedule Appointment'
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

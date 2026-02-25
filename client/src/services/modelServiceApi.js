@@ -16,6 +16,8 @@ export const modelServiceApi = api.injectEndpoints({
         const queryParams = new URLSearchParams();
         if (params.modelId) queryParams.append('modelId', params.modelId);
         if (params.serviceId) queryParams.append('serviceId', params.serviceId);
+        if (params.page) queryParams.append('page', params.page);
+        if (params.limit) queryParams.append('limit', params.limit);
         const queryString = queryParams.toString();
         return `/model-services${queryString ? `?${queryString}` : ''}`;
       },

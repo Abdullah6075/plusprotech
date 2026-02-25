@@ -55,12 +55,33 @@ export const createInventory = async (req, res, next) => {
  */
 export const getAllInventory = async (req, res, next) => {
   try {
-    const inventory = await Inventory.find().sort({ createdAt: -1 });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Get total count
+    const total = await Inventory.countDocuments();
+
+    // Get paginated inventory
+    const inventory = await Inventory.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalPages = Math.ceil(total / limit);
 
     res.status(200).json({
       success: true,
       data: {
-        inventory
+        inventory,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalItems: total,
+          itemsPerPage: limit,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1
+        }
       }
     });
   } catch (error) {

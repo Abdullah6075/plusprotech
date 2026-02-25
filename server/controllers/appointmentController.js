@@ -1,6 +1,7 @@
 import Appointment from '../models/Appointment.js';
 import Model from '../models/Model.js';
 import ModelService from '../models/ModelService.js';
+import { sendAppointmentNotificationToAdmin } from '../utils/emailService.js';
 
 /**
  * @route   POST /api/appointments
@@ -77,6 +78,27 @@ export const createAppointment = async (req, res, next) => {
     await appointment.populate('modelId', 'name image');
     await appointment.populate('modelServiceId', 'name price discountedPrice');
 
+    // Send email notification to admin (non-blocking)
+    try {
+      await sendAppointmentNotificationToAdmin({
+        appointment: {
+          title: appointment.title,
+          description: appointment.description,
+          status: appointment.status
+        },
+        customerName: appointment.name || (appointment.customerId?.name),
+        customerEmail: appointment.contactEmail || (appointment.customerId?.email),
+        customerPhone: appointment.contactPhone || (appointment.customerId?.contactNumber),
+        modelName: appointment.modelId?.name,
+        serviceName: appointment.modelServiceId?.name,
+        appointmentDate: appointment.date,
+        appointmentTime: appointment.time
+      });
+    } catch (emailError) {
+      // Log error but don't fail the appointment creation
+      console.error('Failed to send appointment notification email:', emailError);
+    }
+
     res.status(201).json({
       success: true,
       message: 'Appointment created successfully. Your appointment is confirmed, please visit us on the scheduled date and time.',
@@ -103,6 +125,9 @@ export const getAllAppointments = async (req, res, next) => {
   try {
     const user = req.user;
     const { status, search } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
     const filter = {};
 
     // If user is not admin, only show their own appointments
@@ -127,16 +152,32 @@ export const getAllAppointments = async (req, res, next) => {
       ];
     }
 
+    // Get total count
+    const total = await Appointment.countDocuments(filter);
+
+    // Get paginated appointments
     const appointments = await Appointment.find(filter)
       .populate('customerId', 'name email contactNumber contactEmail')
       .populate('modelId', 'name image')
       .populate('modelServiceId', 'name price discountedPrice')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalPages = Math.ceil(total / limit);
 
     res.status(200).json({
       success: true,
       data: {
-        appointments
+        appointments,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalItems: total,
+          itemsPerPage: limit,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1
+        }
       }
     });
   } catch (error) {

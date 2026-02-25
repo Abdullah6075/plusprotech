@@ -89,20 +89,39 @@ export const createModel = async (req, res, next) => {
 export const getAllModels = async (req, res, next) => {
   try {
     const { categoryId } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
     const filter = {};
 
     if (categoryId) {
       filter.categoryId = categoryId;
     }
 
+    // Get total count
+    const total = await Model.countDocuments(filter);
+
+    // Get paginated models
     const models = await Model.find(filter)
       .populate('categoryId', 'name image')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalPages = Math.ceil(total / limit);
 
     res.status(200).json({
       success: true,
       data: {
-        models
+        models,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalItems: total,
+          itemsPerPage: limit,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1
+        }
       }
     });
   } catch (error) {

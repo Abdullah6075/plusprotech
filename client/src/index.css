@@ -6,6 +6,8 @@
 
 *{
   font-family: "Poppins", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 ::-webkit-scrollbar {
@@ -26,6 +28,8 @@ body {
 .container {
   max-width: 1400px;
   margin: 0 auto;
+  padding-left: 16px;
+  padding-right: 16px;
 }
 
 
@@ -146,4 +150,36 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Marquee Animation */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-100% - var(--gap)));
+  }
+}
+
+@keyframes marquee-vertical {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc(-100% - var(--gap)));
+  }
+}
+
+.animate-marquee {
+  animation: marquee var(--duration) linear infinite;
+}
+
+.animate-marquee-vertical {
+  animation: marquee-vertical var(--duration) linear infinite;
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
 }

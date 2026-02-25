@@ -15,6 +15,8 @@ export const modelApi = api.injectEndpoints({
       query: (params = {}) => {
         const queryParams = new URLSearchParams();
         if (params.categoryId) queryParams.append('categoryId', params.categoryId);
+        if (params.page) queryParams.append('page', params.page);
+        if (params.limit) queryParams.append('limit', params.limit);
         const queryString = queryParams.toString();
         return `/models${queryString ? `?${queryString}` : ''}`;
       },

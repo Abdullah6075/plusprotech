@@ -8,12 +8,15 @@ import { FileText } from 'lucide-react';
  * Shows Create Invoice or View Invoice button based on invoice existence
  */
 const InvoiceButton = ({ appointment, onCreateInvoice, onViewInvoice, showForAllStatuses = false }) => {
-  const { data: invoiceData, isLoading } = useGetInvoiceByAppointmentIdQuery(
+  const { data: invoiceData, isLoading, error } = useGetInvoiceByAppointmentIdQuery(
     appointment._id,
     { skip: !appointment._id }
   );
 
+  // Invoice exists if we have data
+  // 404 errors are expected when no invoice exists yet, so we ignore them
   const hasInvoice = invoiceData?.data?.invoice;
+  const isError = error && error?.status !== 404; // Only treat non-404 errors as real errors
 
   // For admin: only show for completed appointments
   // For customer: show if invoice exists (regardless of status)

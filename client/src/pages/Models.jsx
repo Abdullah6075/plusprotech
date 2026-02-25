@@ -8,13 +8,19 @@ import { Plus, Edit, Trash2, Image as ImageIcon } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
 import ModelForm from '../components/ModelForm';
 import DeleteConfirmationDialog from '../components/DeleteConfirmationDialog';
+import PaginationControls from '../components/PaginationControls';
 
 /**
  * Models Page
  * Displays all models in cards with edit/delete options
  */
 const Models = () => {
-  const { data, isLoading, error } = useGetModelsQuery();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
+  const { data, isLoading, error } = useGetModelsQuery({ 
+    page: currentPage, 
+    limit: itemsPerPage 
+  });
   const [deleteModel, { isLoading: isDeleting }] = useDeleteModelMutation();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingModel, setEditingModel] = useState(null);
@@ -49,9 +55,18 @@ const Models = () => {
     setEditingModel(null);
   };
 
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleSuccess = () => {
     setIsSheetOpen(false);
     setEditingModel(null);
+    // Reset to first page after creating/updating
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
   };
 
   const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -112,6 +127,7 @@ const Models = () => {
   }
 
   const models = data?.data?.models || [];
+  const pagination = data?.data?.pagination || {};
 
   return (
     <div className="space-y-6">
@@ -180,6 +196,10 @@ const Models = () => {
                   <img
                     src={getImageUrl(model.image)}
                     alt={model.name}
+                    loading="lazy"
+                    decoding="async"
+                    width="400"
+                    height="192"
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -223,6 +243,17 @@ const Models = () => {
             </Card>
           ))}
         </div>
+      )}
+
+      {/* Pagination */}
+      {pagination.totalPages > 1 && (
+        <PaginationControls
+          currentPage={pagination.currentPage || currentPage}
+          totalPages={pagination.totalPages || 1}
+          totalItems={pagination.totalItems || 0}
+          itemsPerPage={itemsPerPage}
+          onPageChange={handlePageChange}
+        />
       )}
 
       {/* Delete Confirmation Dialog */}

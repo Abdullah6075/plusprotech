@@ -7,13 +7,19 @@ import { Skeleton } from '../components/ui/skeleton';
 import { Plus, Edit, Trash2, Package } from 'lucide-react';
 import InventoryForm from '../components/InventoryForm';
 import DeleteConfirmationDialog from '../components/DeleteConfirmationDialog';
+import PaginationControls from '../components/PaginationControls';
 
 /**
  * Inventory Page
  * Displays all inventory items with edit/delete options
  */
 const Inventory = () => {
-  const { data, isLoading, error } = useGetInventoryQuery();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
+  const { data, isLoading, error } = useGetInventoryQuery({ 
+    page: currentPage, 
+    limit: itemsPerPage 
+  });
   const [deleteInventory, { isLoading: isDeleting }] = useDeleteInventoryMutation();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingInventory, setEditingInventory] = useState(null);
@@ -48,9 +54,18 @@ const Inventory = () => {
     }
   };
 
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleSuccess = () => {
     setIsSheetOpen(false);
     setEditingInventory(null);
+    // Reset to first page after creating/updating
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
   };
 
   if (isLoading) {
@@ -100,6 +115,7 @@ const Inventory = () => {
   }
 
   const inventory = data?.data?.inventory || [];
+  const pagination = data?.data?.pagination || {};
 
   return (
     <div className="space-y-6">
@@ -198,6 +214,17 @@ const Inventory = () => {
             </Card>
           ))}
         </div>
+      )}
+
+      {/* Pagination */}
+      {pagination.totalPages > 1 && (
+        <PaginationControls
+          currentPage={pagination.currentPage || currentPage}
+          totalPages={pagination.totalPages || 1}
+          totalItems={pagination.totalItems || 0}
+          itemsPerPage={itemsPerPage}
+          onPageChange={handlePageChange}
+        />
       )}
 
       {/* Delete Confirmation Dialog */}

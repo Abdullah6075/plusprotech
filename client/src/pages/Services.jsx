@@ -7,13 +7,19 @@ import { Skeleton } from '../components/ui/skeleton';
 import { Plus, Edit, Trash2, Wrench } from 'lucide-react';
 import ServiceForm from '../components/ServiceForm';
 import DeleteConfirmationDialog from '../components/DeleteConfirmationDialog';
+import PaginationControls from '../components/PaginationControls';
 
 /**
  * Services Page
  * Displays all services in cards with edit/delete options
  */
 const Services = () => {
-  const { data, isLoading, error } = useGetServicesQuery();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
+  const { data, isLoading, error } = useGetServicesQuery({ 
+    page: currentPage, 
+    limit: itemsPerPage 
+  });
   const [deleteService, { isLoading: isDeleting }] = useDeleteServiceMutation();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingService, setEditingService] = useState(null);
@@ -48,9 +54,18 @@ const Services = () => {
     setEditingService(null);
   };
 
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleSuccess = () => {
     setIsSheetOpen(false);
     setEditingService(null);
+    // Reset to first page after creating/updating
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
   };
 
   if (isLoading) {
@@ -103,6 +118,7 @@ const Services = () => {
   }
 
   const services = data?.data?.services || [];
+  const pagination = data?.data?.pagination || {};
 
   return (
     <div className="space-y-6">
@@ -199,6 +215,17 @@ const Services = () => {
             </Card>
           ))}
         </div>
+      )}
+
+      {/* Pagination */}
+      {pagination.totalPages > 1 && (
+        <PaginationControls
+          currentPage={pagination.currentPage || currentPage}
+          totalPages={pagination.totalPages || 1}
+          totalItems={pagination.totalItems || 0}
+          itemsPerPage={itemsPerPage}
+          onPageChange={handlePageChange}
+        />
       )}
 
       {/* Delete Confirmation Dialog */}

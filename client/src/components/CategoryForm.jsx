@@ -157,6 +157,8 @@ const CategoryForm = ({ category, onSuccess, onClose }) => {
               <img
                 src={imagePreview}
                 alt="Preview"
+                loading="eager"
+                decoding="async"
                 className="w-full h-full object-cover"
               />
             </div>

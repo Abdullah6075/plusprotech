@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useGetModelServicesQuery } from '../services/modelServiceApi';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogBody } from './ui/dialog';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Skeleton } from './ui/skeleton';
@@ -36,7 +36,7 @@ const ServiceSelectionDialog = ({ open, onOpenChange, model }) => {
   return (
     <>
       <Dialog open={open && !showAppointmentForm} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent size="lg">
           <DialogHeader>
             <DialogTitle>Select a Service for {model?.name}</DialogTitle>
             <DialogDescription>
@@ -44,7 +44,8 @@ const ServiceSelectionDialog = ({ open, onOpenChange, model }) => {
             </DialogDescription>
           </DialogHeader>
 
-          {isLoading ? (
+          <DialogBody>
+            {isLoading ? (
             <div className="space-y-4">
               {[...Array(3)].map((_, i) => (
                 <Card key={i}>
@@ -65,7 +66,7 @@ const ServiceSelectionDialog = ({ open, onOpenChange, model }) => {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {modelServices.map((service) => (
                 <Card key={service._id} className="hover:shadow-md transition-shadow">
                   <CardHeader>
@@ -112,6 +113,7 @@ const ServiceSelectionDialog = ({ open, onOpenChange, model }) => {
               ))}
             </div>
           )}
+          </DialogBody>
         </DialogContent>
       </Dialog>
 

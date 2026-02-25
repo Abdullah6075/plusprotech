@@ -8,13 +8,19 @@ import { Skeleton } from '../components/ui/skeleton';
 import { Plus, Edit, Trash2, Image as ImageIcon } from 'lucide-react';
 import CategoryForm from '../components/CategoryForm';
 import DeleteConfirmationDialog from '../components/DeleteConfirmationDialog';
+import PaginationControls from '../components/PaginationControls';
 
 /**
  * Categories Page
  * Displays all categories in cards with edit/delete options
  */
 const Categories = () => {
-  const { data, isLoading, error } = useGetCategoriesQuery();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
+  const { data, isLoading, error } = useGetCategoriesQuery({ 
+    page: currentPage, 
+    limit: itemsPerPage 
+  });
   const [deleteCategory, { isLoading: isDeleting }] = useDeleteCategoryMutation();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
@@ -46,11 +52,6 @@ const Categories = () => {
   };
 
   const handleClose = () => {
-    setIsSheetOpen(false);
-    setEditingCategory(null);
-  };
-
-  const handleSuccess = () => {
     setIsSheetOpen(false);
     setEditingCategory(null);
   };
@@ -113,6 +114,21 @@ const Categories = () => {
   }
 
   const categories = data?.data?.categories || [];
+  const pagination = data?.data?.pagination || {};
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSuccess = () => {
+    setIsSheetOpen(false);
+    setEditingCategory(null);
+    // Reset to first page after creating/updating
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -181,6 +197,10 @@ const Categories = () => {
                   <img
                     src={getImageUrl(category.image)}
                     alt={category.name}
+                    loading="lazy"
+                    decoding="async"
+                    width="400"
+                    height="192"
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -217,6 +237,17 @@ const Categories = () => {
             </Card>
           ))}
         </div>
+      )}
+
+      {/* Pagination */}
+      {pagination.totalPages > 1 && (
+        <PaginationControls
+          currentPage={pagination.currentPage || currentPage}
+          totalPages={pagination.totalPages || 1}
+          totalItems={pagination.totalItems || 0}
+          itemsPerPage={itemsPerPage}
+          onPageChange={handlePageChange}
+        />
       )}
 
       {/* Delete Confirmation Dialog */}

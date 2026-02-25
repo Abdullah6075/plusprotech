@@ -7,11 +7,18 @@ import { api } from './api';
 export const serviceApi = api.injectEndpoints({
   endpoints: (builder) => ({
     /**
-     * Get all services
-     * @returns {Promise} Services array
+     * Get all services with pagination
+     * @param {Object} params - Query parameters { page, limit }
+     * @returns {Promise} Services array with pagination
      */
     getServices: builder.query({
-      query: () => '/services',
+      query: (params = {}) => {
+        const queryParams = new URLSearchParams();
+        if (params.page) queryParams.append('page', params.page);
+        if (params.limit) queryParams.append('limit', params.limit);
+        const queryString = queryParams.toString();
+        return `/services${queryString ? `?${queryString}` : ''}`;
+      },
       providesTags: ['Service'],
     }),
 

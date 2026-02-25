@@ -66,6 +66,11 @@ const getNavLinksByRole = (role) => {
         url: "/dashboard/admin-appointments",
         icon: Calendar,
       },
+      {
+        name: "Reviews",
+        url: "/dashboard/reviews",
+        icon: MessageCircle,
+      },
     ];
   }
   if (role === "customer") {
@@ -92,13 +97,17 @@ export function AppSidebar({ ...props }) {
           size="lg"
           className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
         >
-          <div className="flex aspect-square size-8 shrink-0 overflow-hidden p-1 items-center justify-center rounded-lg text-sidebar-primary-foreground">
+          {/* <div className="flex aspect-square size-8 shrink-0 overflow-hidden p-1 items-center justify-center rounded-lg text-sidebar-primary-foreground">
             <img
               src="https://webfilesstorageaccount.blob.core.windows.net/careers/dwtclogo.png"
               alt="Logo"
+              loading="eager"
+              decoding="async"
+              width="32"
+              height="32"
               className="w-full h-full object-contain"
             />
-          </div>
+          </div> */}
           <div className="grid flex-1 text-left text-sm leading-tight">
             <span className="truncate font-semibold">PlusProtech</span>
             <span className="truncate text-xs text-gray-500">

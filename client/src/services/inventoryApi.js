@@ -7,11 +7,18 @@ import { api } from './api';
 export const inventoryApi = api.injectEndpoints({
   endpoints: (builder) => ({
     /**
-     * Get all inventory items
-     * @returns {Promise} Inventory array
+     * Get all inventory items with pagination
+     * @param {Object} params - Query parameters { page, limit }
+     * @returns {Promise} Inventory array with pagination
      */
     getInventory: builder.query({
-      query: () => '/inventory',
+      query: (params = {}) => {
+        const queryParams = new URLSearchParams();
+        if (params.page) queryParams.append('page', params.page);
+        if (params.limit) queryParams.append('limit', params.limit);
+        const queryString = queryParams.toString();
+        return `/inventory${queryString ? `?${queryString}` : ''}`;
+      },
       providesTags: ['Inventory'],
     }),
 

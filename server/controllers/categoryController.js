@@ -63,19 +63,43 @@ export const createCategory = async (req, res, next) => {
 
 /**
  * @route   GET /api/categories
- * @desc    Get all categories
+ * @desc    Get all categories with pagination
  * @access  Public
  * 
- * @returns {Object} success, data: { categories }
+ * @query   {Number} page - Page number (default: 1)
+ * @query   {Number} limit - Items per page (default: 10)
+ * 
+ * @returns {Object} success, data: { categories, pagination }
  */
 export const getAllCategories = async (req, res, next) => {
   try {
-    const categories = await Category.find().sort({ createdAt: -1 });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Get total count
+    const total = await Category.countDocuments();
+
+    // Get paginated categories
+    const categories = await Category.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalPages = Math.ceil(total / limit);
 
     res.status(200).json({
       success: true,
       data: {
-        categories
+        categories,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalItems: total,
+          itemsPerPage: limit,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1
+        }
       }
     });
   } catch (error) {

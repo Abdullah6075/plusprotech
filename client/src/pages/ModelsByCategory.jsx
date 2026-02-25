@@ -1,17 +1,14 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useGetCategoryByIdQuery } from '../services/categoryApi';
 import { useGetModelsQuery } from '../services/modelApi';
-import { useGetModelServicesQuery } from '../services/modelServiceApi';
 import { useSelector } from 'react-redux';
 import { selectIsAuthenticated } from '../store/authSlice';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Skeleton } from '../components/ui/skeleton';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Badge } from '../components/ui/badge';
 import { Image as ImageIcon, ArrowLeft, Calendar, LogIn } from 'lucide-react';
-import ServiceSelectionDialog from '../components/ServiceSelectionDialog';
 
 /**
  * Models By Category Page
@@ -19,12 +16,10 @@ import ServiceSelectionDialog from '../components/ServiceSelectionDialog';
  */
 const ModelsByCategory = () => {
   const { categoryId } = useParams();
+  const navigate = useNavigate();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const { data: categoryData, isLoading: categoryLoading } = useGetCategoryByIdQuery(categoryId);
   const { data: modelsData, isLoading: modelsLoading } = useGetModelsQuery({ categoryId });
-  const [selectedModel, setSelectedModel] = useState(null);
-  const [serviceDialogOpen, setServiceDialogOpen] = useState(false);
-  const [authDialogOpen, setAuthDialogOpen] = useState(false);
 
   const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
   const getImageUrl = (imagePath) => {
@@ -37,22 +32,8 @@ const ModelsByCategory = () => {
   const models = modelsData?.data?.models || [];
 
   const handleScheduleService = (model) => {
-    setSelectedModel(model);
-    // Show login popup if user is not authenticated
-    if (!isAuthenticated) {
-      setAuthDialogOpen(true);
-    } else {
-      // User is authenticated, proceed directly to service selection
-      setServiceDialogOpen(true);
-    }
-  };
-
-  const handleContinueAsGuest = () => {
-    setAuthDialogOpen(false);
-    // Proceed to service selection as guest
-    if (selectedModel) {
-      setServiceDialogOpen(true);
-    }
+    // Navigate to service selection page
+    navigate(`/model/${model._id}/services?categoryId=${categoryId}`);
   };
 
   if (categoryLoading || modelsLoading) {
@@ -109,6 +90,10 @@ const ModelsByCategory = () => {
             <img
               src={getImageUrl(category.image)}
               alt={category.name}
+              loading="lazy"
+              decoding="async"
+              width="64"
+              height="64"
               className="h-16 w-16 rounded-lg object-cover"
             />
           )}
@@ -139,6 +124,10 @@ const ModelsByCategory = () => {
                   <img
                     src={getImageUrl(model.image)}
                     alt={model.name}
+                    loading="lazy"
+                    decoding="async"
+                    width="400"
+                    height="192"
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -164,55 +153,6 @@ const ModelsByCategory = () => {
         </div>
       )}
 
-      {/* Optional Login Dialog - Show when user clicks Schedule Service and is not logged in */}
-      <Dialog open={authDialogOpen && !isAuthenticated} onOpenChange={(open) => {
-        if (!open) {
-          setAuthDialogOpen(false);
-        }
-      }}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="rounded-full bg-primary/10 p-2">
-                <LogIn className="h-6 w-6 text-primary" />
-              </div>
-              <DialogTitle className="text-xl">Login Optional</DialogTitle>
-            </div>
-            <DialogDescription className="text-left text-base">
-              You can schedule an appointment without logging in, or login to save your information for faster booking next time.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="bg-muted/50 rounded-lg p-4 mb-4">
-            <p className="text-sm text-muted-foreground">
-              <strong>Benefits of logging in:</strong> Track your appointments, faster booking, and receive updates about your service requests.
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={handleContinueAsGuest}
-            >
-              Continue as Guest
-            </Button>
-            <Link to="/login" className="flex-1" onClick={() => setAuthDialogOpen(false)}>
-              <Button className="w-full">
-                <LogIn className="mr-2 h-4 w-4" />
-                Login / Register
-              </Button>
-            </Link>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Service Selection Dialog */}
-      {selectedModel && (
-        <ServiceSelectionDialog
-          open={serviceDialogOpen}
-          onOpenChange={setServiceDialogOpen}
-          model={selectedModel}
-        />
-      )}
     </div>
   );
 };

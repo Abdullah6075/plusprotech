@@ -1,17 +1,14 @@
 "use client";
 
 import {
-  BadgeCheck,
-  Bell,
   ChevronsUpDown,
-  CreditCard,
   Headset,
   LogOut,
-  Sparkles,
   User,
+  Home,
 } from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -93,19 +90,10 @@ export function NavUser() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-                <Link className="w-full" to="/dashboard/support-ticket">
+                <Link className="w-full" to="/">
               <DropdownMenuItem className="w-full cursor-pointer">
-                  <Headset />
-                  Support Ticket
-              </DropdownMenuItem>
-                </Link>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-                <Link className="w-full" to="/dashboard/profile">
-              <DropdownMenuItem className="w-full cursor-pointer">
-                  <User />
-                  Profile
+                  <Home />
+                  Back To Home
               </DropdownMenuItem>
                 </Link>
             </DropdownMenuGroup>

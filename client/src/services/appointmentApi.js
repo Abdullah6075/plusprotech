@@ -17,6 +17,8 @@ export const appointmentApi = api.injectEndpoints({
         const queryParams = new URLSearchParams();
         if (params.status) queryParams.append('status', params.status);
         if (params.search) queryParams.append('search', params.search);
+        if (params.page) queryParams.append('page', params.page);
+        if (params.limit) queryParams.append('limit', params.limit);
         const queryString = queryParams.toString();
         return `/appointments${queryString ? `?${queryString}` : ''}`;
       },

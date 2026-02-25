@@ -8,13 +8,19 @@ import { Badge } from '../components/ui/badge';
 import { Plus, Edit, Trash2, Package } from 'lucide-react';
 import ModelServiceForm from '../components/ModelServiceForm';
 import DeleteConfirmationDialog from '../components/DeleteConfirmationDialog';
+import PaginationControls from '../components/PaginationControls';
 
 /**
  * ModelServices Page
  * Displays all model services in cards with edit/delete options
  */
 const ModelServices = () => {
-  const { data, isLoading, error } = useGetModelServicesQuery();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
+  const { data, isLoading, error } = useGetModelServicesQuery({ 
+    page: currentPage, 
+    limit: itemsPerPage 
+  });
   const [deleteModelService, { isLoading: isDeleting }] = useDeleteModelServiceMutation();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingModelService, setEditingModelService] = useState(null);
@@ -49,9 +55,18 @@ const ModelServices = () => {
     setEditingModelService(null);
   };
 
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleSuccess = () => {
     setIsSheetOpen(false);
     setEditingModelService(null);
+    // Reset to first page after creating/updating
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
   };
 
   const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -113,6 +128,7 @@ const ModelServices = () => {
   }
 
   const modelServices = data?.data?.modelServices || [];
+  const pagination = data?.data?.pagination || {};
 
   return (
     <div className="space-y-6">
@@ -234,6 +250,17 @@ const ModelServices = () => {
             </Card>
           ))}
         </div>
+      )}
+
+      {/* Pagination */}
+      {pagination.totalPages > 1 && (
+        <PaginationControls
+          currentPage={pagination.currentPage || currentPage}
+          totalPages={pagination.totalPages || 1}
+          totalItems={pagination.totalItems || 0}
+          itemsPerPage={itemsPerPage}
+          onPageChange={handlePageChange}
+        />
       )}
 
       {/* Delete Confirmation Dialog */}

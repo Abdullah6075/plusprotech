@@ -95,6 +95,9 @@ export const createModelService = async (req, res, next) => {
 export const getAllModelServices = async (req, res, next) => {
   try {
     const { modelId, serviceId } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
     const filter = {};
 
     if (modelId) {
@@ -104,15 +107,31 @@ export const getAllModelServices = async (req, res, next) => {
       filter.serviceId = serviceId;
     }
 
+    // Get total count
+    const total = await ModelService.countDocuments(filter);
+
+    // Get paginated model services
     const modelServices = await ModelService.find(filter)
       .populate('modelId', 'name image')
       .populate('serviceId', 'name')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalPages = Math.ceil(total / limit);
 
     res.status(200).json({
       success: true,
       data: {
-        modelServices
+        modelServices,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalItems: total,
+          itemsPerPage: limit,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1
+        }
       }
     });
   } catch (error) {
