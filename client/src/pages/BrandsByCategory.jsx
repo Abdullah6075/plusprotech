@@ -3,15 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useGetCategoryByIdQuery } from '../services/categoryApi';
 import { useGetBrandsByCategoryQuery } from '../services/brandApi';
 import { ChevronRight, ArrowLeft, Tag } from 'lucide-react';
-
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
-const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith('http')) return imagePath;
-    const baseUrl = BASE_URL.endsWith('/api') ? BASE_URL.slice(0, -4) : BASE_URL;
-    return `${baseUrl}${imagePath}`;
-};
+import { getImageUrl } from '../lib/utils';
 
 const BrandCard = ({ brand, categoryId }) => {
     const initial = brand.name.charAt(0).toUpperCase();
@@ -23,17 +15,17 @@ const BrandCard = ({ brand, categoryId }) => {
             className="group bg-white border border-gray-100 hover:border-[#EC4421]/30 rounded-2xl p-6 flex flex-col items-center gap-4 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1"
         >
             {/* Brand image or initial placeholder */}
-            <div className="w-24 h-24 rounded-2xl overflow-hidden flex items-center justify-center bg-gray-50 border border-gray-100 shrink-0">
-                {imageUrl ? (
+            <div className="w-24 h-24 rounded-2xl overflow-hidden flex items-center justify-center bg-gray-50 border border-gray-100 shrink-0 relative">
+                <span className="text-4xl font-bold text-[#EC4421]">{initial}</span>
+                {imageUrl && (
                     <img
                         src={imageUrl}
                         alt={brand.name}
                         loading="lazy"
                         decoding="async"
-                        className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
+                        className="absolute inset-0 w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
-                ) : (
-                    <span className="text-4xl font-bold text-[#EC4421]">{initial}</span>
                 )}
             </div>
 

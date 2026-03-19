@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, X, ClipboardList, Bell, History, LogIn } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { getImageUrl } from '@/lib/utils'
 
 const LoginAwarenessModal = ({ onContinue, onClose }) => (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -89,20 +90,12 @@ const LoginAwarenessModal = ({ onContinue, onClose }) => (
 )
 
 const ServiceSection = () => {
-    const { data, isLoading } = useGetCategoriesQuery()
+    const { data, isLoading } = useGetCategoriesQuery({ limit: 1000 })
     const categories = data?.data?.categories || []
-    const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
     const { isAuthenticated } = useAuth()
     const navigate = useNavigate()
 
     const [pendingUrl, setPendingUrl] = useState(null)
-
-    const getImageUrl = (imagePath) => {
-        if (!imagePath) return null
-        if (imagePath.startsWith('http')) return imagePath
-        const baseUrl = BASE_URL.endsWith('/api') ? BASE_URL.slice(0, -4) : BASE_URL
-        return `${baseUrl}${imagePath}`
-    }
 
     const handleCategoryClick = (e, categoryId) => {
         e.preventDefault()
@@ -162,16 +155,17 @@ const ServiceSection = () => {
                                     className="group w-full cursor-pointer"
                                     onClick={(e) => handleCategoryClick(e, category?._id)}
                                 >
-                                    <div className="w-full h-56 sm:h-72 overflow-hidden rounded-2xl relative shadow-md">
-                                        <img
-                                            src={getImageUrl(category?.image)}
-                                            loading="lazy"
-                                            decoding="async"
-                                            alt={category?.name || 'Service category'}
-                                            width="400"
-                                            height="400"
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
-                                        />
+                                    <div className="w-full h-56 sm:h-72 overflow-hidden rounded-2xl relative shadow-md bg-gray-200">
+                                        {getImageUrl(category?.image) && (
+                                            <img
+                                                src={getImageUrl(category?.image)}
+                                                loading="lazy"
+                                                decoding="async"
+                                                alt={category?.name || 'Service category'}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
+                                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                            />
+                                        )}
                                         <div className="absolute inset-0 bg-gradient-to-t from-gray-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-5">
                                             <span className="text-white text-sm font-semibold flex items-center gap-1.5">
                                                 View Models <ArrowRight className="w-4 h-4" />

@@ -1,9 +1,17 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import heroImage from "../assets/hero-image.jpg"
 import logo from "../assets/logo.png"
 import { useAuth } from '@/hooks/useAuth'
-import { Menu, X, LayoutDashboard, Star, ShieldCheck, Clock } from 'lucide-react'
+import { Menu, X, LayoutDashboard, Star, ShieldCheck, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
+
+import slide1 from '../assets/carousal-image1.jpeg'
+import slide2 from '../assets/carousal-image2.jpeg'
+import slide3 from '../assets/carousal-image3.jpeg'
+import slide4 from '../assets/carousal-image4.jpeg'
+import slide5 from '../assets/carousal-image5.jpeg'
+
+const SLIDES = [slide1, slide2, slide3, slide4, slide5]
+const AUTOPLAY_INTERVAL = 5000
 
 const NAV_LINKS = ['about', 'services', 'reviews', 'faq']
 
@@ -17,12 +25,26 @@ const HeroSection = () => {
     const { user, isAuthenticated, logout } = useAuth()
     const [scrolled, setScrolled] = useState(false)
     const [menuOpen, setMenuOpen] = useState(false)
-
+    const [currentSlide, setCurrentSlide] = useState(0)
+    const isPaused = false
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 30)
         window.addEventListener('scroll', handleScroll)
         return () => window.removeEventListener('scroll', handleScroll)
     }, [])
+
+    const goToSlide = useCallback((index) => {
+        setCurrentSlide((index + SLIDES.length) % SLIDES.length)
+    }, [])
+
+    const goNext = useCallback(() => goToSlide(currentSlide + 1), [currentSlide, goToSlide])
+    const goPrev = useCallback(() => goToSlide(currentSlide - 1), [currentSlide, goToSlide])
+
+    // Autoplay
+    useEffect(() => {
+        const timer = setInterval(goNext, AUTOPLAY_INTERVAL)
+        return () => clearInterval(timer)
+    }, [goNext])
 
     const scrollTo = (id) => {
         setMenuOpen(false)
@@ -140,28 +162,52 @@ const HeroSection = () => {
                 )}
             </nav>
 
-            {/* ── Hero ── */}
-            <div className="relative w-full min-h-screen flex items-center overflow-hidden">
-                {/* Background image */}
-                <img
-                    src={heroImage}
-                    alt="PlusProtech repair shop"
-                    loading="eager"
-                    decoding="async"
-                    width="1920"
-                    height="1080"
-                    className="absolute inset-0 w-full h-full object-cover object-center scale-105"
-                />
+            {/* ── Hero Carousel ── */}
+            <div
+                className="relative w-full min-h-screen flex items-center overflow-hidden"
+            >
+                {/* Carousel slides — crossfade */}
+                {SLIDES.map((src, i) => (
+                    <img
+                        key={i}
+                        src={src}
+                        alt={`PlusProtech shop slide ${i + 1}`}
+                        loading={i === 0 ? 'eager' : 'lazy'}
+                        decoding="async"
+                        className={`absolute inset-0 w-full h-full object-cover object-center scale-105 transition-opacity duration-1000 ${
+                            i === currentSlide ? 'opacity-100' : 'opacity-0'
+                        }`}
+                        aria-hidden={i !== currentSlide}
+                    />
+                ))}
 
                 {/* Multi-layer overlay for depth */}
-                <div className="absolute inset-0 bg-gradient-to-r from-gray-950/95 via-gray-900/80 to-gray-900/40" />
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-950/70 via-transparent to-gray-950/30" />
+                <div className="absolute inset-0 bg-gradient-to-r from-gray-950/95 via-gray-900/80 to-gray-900/40 z-10" />
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-950/70 via-transparent to-gray-950/30 z-10" />
 
                 {/* Decorative brand-color accent bar on left edge */}
-                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#EC4421]" />
+                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#EC4421] z-20" />
 
-                {/* Content */}
-                <div className="relative z-10 container pt-28 pb-20">
+                {/* Prev / Next arrows */}
+                <button
+                    type="button"
+                    onClick={goPrev}
+                    aria-label="Previous slide"
+                    className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/30 hover:bg-[#EC4421] border border-white/20 hover:border-[#EC4421] flex items-center justify-center text-white transition-all duration-200 hover:scale-110"
+                >
+                    <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                    type="button"
+                    onClick={goNext}
+                    aria-label="Next slide"
+                    className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/30 hover:bg-[#EC4421] border border-white/20 hover:border-[#EC4421] flex items-center justify-center text-white transition-all duration-200 hover:scale-110"
+                >
+                    <ChevronRight className="w-5 h-5" />
+                </button>
+
+                {/* Hero content */}
+                <div className="relative z-20 container pt-28 pb-20">
                     <div className="max-w-2xl flex flex-col gap-6">
 
                         {/* Eyebrow badge */}
@@ -213,7 +259,41 @@ const HeroSection = () => {
                     </div>
                 </div>
 
+                {/* Dot indicators */}
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+                    {SLIDES.map((_, i) => (
+                        <button
+                            key={i}
+                            type="button"
+                            onClick={() => goToSlide(i)}
+                            aria-label={`Go to slide ${i + 1}`}
+                            className={`rounded-full transition-all duration-300 ${
+                                i === currentSlide
+                                    ? 'w-6 h-2 bg-[#EC4421]'
+                                    : 'w-2 h-2 bg-white/40 hover:bg-white/70'
+                            }`}
+                        />
+                    ))}
+                </div>
+
+                {/* Progress bar at the bottom of the slide */}
+                {!isPaused && (
+                    <div
+                        key={currentSlide}
+                        className="absolute bottom-0 left-0 h-0.5 bg-[#EC4421] z-20"
+                        style={{
+                            animation: `slideProgress ${AUTOPLAY_INTERVAL}ms linear forwards`,
+                        }}
+                    />
+                )}
             </div>
+
+            <style>{`
+                @keyframes slideProgress {
+                    from { width: 0%; }
+                    to   { width: 100%; }
+                }
+            `}</style>
         </div>
     )
 }

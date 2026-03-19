@@ -30,60 +30,45 @@ const ModelServiceForm = ({ modelService, onSuccess, onClose }) => {
   const [createModelService, { isLoading: isCreating }] = useCreateModelServiceMutation();
   const [updateModelService, { isLoading: isUpdating }] = useUpdateModelServiceMutation();
 
-  // Cascading filter state — these are UI filters, not submitted form fields
-  const [selectedCategoryId, setSelectedCategoryId] = useState('');
-  const [selectedBrandId, setSelectedBrandId] = useState('');
+  // Derive initial category/brand from the modelService prop so the cascading
+  // filters are correct from the very first render (no flash of empty dropdowns).
+  const initCategoryId =
+    modelService?.modelId?.categoryId?._id ||
+    modelService?.modelId?.categoryId ||
+    '';
+  const initBrandId =
+    modelService?.modelId?.brandId?._id ||
+    modelService?.modelId?.brandId ||
+    '';
 
-  const { data: categoriesData } = useGetCategoriesQuery();
+  // Cascading filter state — these are UI filters, not submitted form fields
+  const [selectedCategoryId, setSelectedCategoryId] = useState(initCategoryId);
+  const [selectedBrandId, setSelectedBrandId] = useState(initBrandId);
+
+  const { data: categoriesData } = useGetCategoriesQuery({ limit: 1000 });
   const { data: brandsData, isFetching: brandsFetching } = useGetBrandsByCategoryQuery(
     selectedCategoryId,
     { skip: !selectedCategoryId }
   );
   const { data: modelsData, isFetching: modelsFetching } = useGetModelsQuery(
-    { categoryId: selectedCategoryId, brandId: selectedBrandId },
+    { categoryId: selectedCategoryId, brandId: selectedBrandId, limit: 1000 },
     { skip: !selectedCategoryId || !selectedBrandId }
   );
-  const { data: servicesData } = useGetServicesQuery();
+  const { data: servicesData } = useGetServicesQuery({ limit: 1000 });
 
   const categories = categoriesData?.data?.categories || [];
   const brands = brandsData?.data?.brands || [];
   const models = modelsData?.data?.models || [];
   const services = servicesData?.data?.services || [];
 
-  useEffect(() => {
-    if (modelService) {
-      // Pre-populate cascading filters from the existing model's category/brand
-      const catId =
-        modelService.modelId?.categoryId?._id ||
-        modelService.modelId?.categoryId ||
-        '';
-      const brandId =
-        modelService.modelId?.brandId?._id ||
-        modelService.modelId?.brandId ||
-        '';
-      setSelectedCategoryId(catId);
-      setSelectedBrandId(brandId);
-      formik.setValues({
-        name: modelService.name || '',
-        price: modelService.price || '',
-        discountedPrice: modelService.discountedPrice || '',
-        modelId: modelService.modelId?._id || modelService.modelId || '',
-        serviceId: modelService.serviceId?._id || modelService.serviceId || '',
-      });
-    } else {
-      setSelectedCategoryId('');
-      setSelectedBrandId('');
-      formik.resetForm();
-    }
-  }, [modelService]);
-
   const formik = useFormik({
+    enableReinitialize: true,
     initialValues: {
-      name: '',
-      price: '',
-      discountedPrice: '',
-      modelId: '',
-      serviceId: '',
+      name: modelService?.name || '',
+      price: modelService?.price || '',
+      discountedPrice: modelService?.discountedPrice || '',
+      modelId: modelService?.modelId?._id || modelService?.modelId || '',
+      serviceId: modelService?.serviceId?._id || modelService?.serviceId || '',
     },
     validationSchema: Yup.object({
       name: Yup.string()
@@ -136,6 +121,21 @@ const ModelServiceForm = ({ modelService, onSuccess, onClose }) => {
       }
     },
   });
+
+  // Sync the cascading filter state when the modelService prop changes.
+  // Formik values are handled by enableReinitialize above.
+  useEffect(() => {
+    const catId =
+      modelService?.modelId?.categoryId?._id ||
+      modelService?.modelId?.categoryId ||
+      '';
+    const brandId =
+      modelService?.modelId?.brandId?._id ||
+      modelService?.modelId?.brandId ||
+      '';
+    setSelectedCategoryId(catId);
+    setSelectedBrandId(brandId);
+  }, [modelService]);
 
   const handleCategoryChange = (value) => {
     setSelectedCategoryId(value);

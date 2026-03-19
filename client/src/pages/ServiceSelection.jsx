@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useGetModelServicesQuery } from '../services/modelServiceApi';
 import { useGetModelByIdQuery } from '../services/modelApi';
 import { Button } from '../components/ui/button';
@@ -32,13 +32,14 @@ const ServiceSelection = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <Link 
-        to={`/category/${categoryId || model?.categoryId?._id || model?.categoryId}`} 
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
         className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Models
-      </Link>
+      </button>
 
       <div className="space-y-6">
         <div>

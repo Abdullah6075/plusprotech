@@ -9,6 +9,7 @@ import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { ImageIcon, Upload } from 'lucide-react';
+import { getImageUrl } from '../lib/utils';
 
 /**
  * Category Form Component
@@ -19,16 +20,6 @@ const CategoryForm = ({ category, onSuccess, onClose }) => {
   const [updateCategory, { isLoading: isUpdating }] = useUpdateCategoryMutation();
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
-
-  const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith('http')) return imagePath;
-    const baseUrl = BASE_URL.endsWith('/api')
-      ? BASE_URL.slice(0, -4)
-      : BASE_URL;
-    return `${baseUrl}${imagePath}`;
-  };
 
   useEffect(() => {
     if (category) {

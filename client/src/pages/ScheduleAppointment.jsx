@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useSelector } from 'react-redux';
@@ -151,10 +151,14 @@ const ScheduleAppointment = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <Link to={`/category/${model.categoryId?._id || model.categoryId}`} className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6">
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
+        className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6"
+      >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back
-      </Link>
+      </button>
 
       <div className="space-y-6">
         <div>

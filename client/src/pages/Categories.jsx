@@ -9,6 +9,7 @@ import { Plus, Edit, Trash2, Image as ImageIcon } from 'lucide-react';
 import CategoryForm from '../components/CategoryForm';
 import DeleteConfirmationDialog from '../components/DeleteConfirmationDialog';
 import PaginationControls from '../components/PaginationControls';
+import { getImageUrl } from '../lib/utils';
 
 /**
  * Categories Page
@@ -54,16 +55,6 @@ const Categories = () => {
   const handleClose = () => {
     setIsSheetOpen(false);
     setEditingCategory(null);
-  };
-
-  const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith('http')) return imagePath;
-    const baseUrl = BASE_URL.endsWith('/api')
-      ? BASE_URL.slice(0, -4)
-      : BASE_URL;
-    return `${baseUrl}${imagePath}`;
   };
 
   if (isLoading) {
@@ -195,21 +186,17 @@ const Categories = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {categories.map((category) => (
             <Card key={category._id} className="overflow-hidden hover:shadow-md transition-shadow">
-              <div className="relative h-48 bg-muted">
-                {getImageUrl(category.image) ? (
+              <div className="relative h-48 bg-muted flex items-center justify-center">
+                <ImageIcon className="h-12 w-12 text-muted-foreground" />
+                {getImageUrl(category.image) && (
                   <img
                     src={getImageUrl(category.image)}
                     alt={category.name}
                     loading="lazy"
                     decoding="async"
-                    width="400"
-                    height="192"
-                    className="w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-cover"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <ImageIcon className="h-12 w-12 text-muted-foreground" />
-                  </div>
                 )}
               </div>
               <CardHeader>

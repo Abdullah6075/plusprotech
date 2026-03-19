@@ -41,8 +41,7 @@ const CONTACT_ITEMS = [
         label: 'Business Hours',
         content: (
             <p className="text-sm text-gray-600 font-light mt-0.5 leading-relaxed">
-                Mon – Fri: 9:00 AM – 6:00 PM<br />
-                Saturday: 10:00 AM – 4:00 PM<br />
+                Mon – Sat: 9:00 AM – 7:00 PM<br />
                 Sunday: Closed
             </p>
         ),

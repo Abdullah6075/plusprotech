@@ -69,16 +69,6 @@ const ModelServices = () => {
     }
   };
 
-  const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith('http')) return imagePath;
-    const baseUrl = BASE_URL.endsWith('/api')
-      ? BASE_URL.slice(0, -4)
-      : BASE_URL;
-    return `${baseUrl}${imagePath}`;
-  };
-
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -161,6 +151,7 @@ const ModelServices = () => {
             </SheetHeader>
             <div className="flex-1 overflow-y-auto px-6 pb-6">
               <ModelServiceForm
+                key={editingModelService?._id ?? 'new'}
                 modelService={editingModelService}
                 onSuccess={handleSuccess}
                 onClose={handleClose}

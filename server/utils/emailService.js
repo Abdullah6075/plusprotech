@@ -2,6 +2,24 @@
  * Email Service using Brevo (formerly Sendinblue)
  * Handles sending transactional emails via REST API
  */
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Embed the logo as a base64 data URI so it renders in every email client
+// regardless of production URL configuration.
+let LOGO_SRC = '';
+try {
+  const logoPath = path.join(__dirname, '..', 'logo.png');
+  if (fs.existsSync(logoPath)) {
+    LOGO_SRC = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
+  }
+} catch (e) {
+  console.warn('Could not embed logo in email template:', e.message);
+}
 
 // Get API key from environment (trim any accidental whitespace)
 const getApiKey = () => {
@@ -54,9 +72,6 @@ const SENDER = {
 const B = '#EC4421';
 const BD = '#c93519';
 
-// Backend base URL for serving the logo
-const BACKEND_URL = (process.env.BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '');
-
 // Reusable HTML building blocks
 const emailWrapper = (content) => `
 <!DOCTYPE html>
@@ -76,10 +91,15 @@ const emailWrapper = (content) => `
           <table width="100%" cellpadding="0" cellspacing="0">
             <tr>
               <td>
-                <img src="${BACKEND_URL}/logo.png" alt="PlusProtech" height="40" style="height:40px;width:auto;display:block;" />
+                ${LOGO_SRC
+                  ? `<img src="${LOGO_SRC}" alt="PlusProtech" height="40" style="height:40px;width:auto;display:block;" />`
+                  : `<span style="font-size:20px;font-weight:800;color:#fff;letter-spacing:-.3px;">Plus<span style="color:${B};">Protech</span></span>`
+                }
               </td>
-              <td align="right" style="font-size:11px;color:rgba(255,255,255,.35);letter-spacing:.05em;">
-                plusprotech.com
+              <td align="right">
+                <a href="https://plusprotech.com" style="font-size:11px;color:${B};text-decoration:none;letter-spacing:.05em;">
+                  plusprotech.com
+                </a>
               </td>
             </tr>
           </table>
@@ -194,7 +214,7 @@ export const sendAppointmentNotificationToAdmin = async (appointmentData) => {
     return await sendViaBrevo({
       sender: SENDER,
       to: [{ email: adminEmail, name: 'PlusProtech Admin' }],
-      subject: `📅 New Appointment — ${appointment.title || 'Appointment'}`,
+      subject: `New Appointment — ${appointment.title || 'Appointment'}`,
       htmlContent: emailWrapper(body),
       textContent: `New Appointment: ${appointment.title}\nDate: ${formattedDate} at ${appointmentTime}\nModel: ${modelName}\nService: ${serviceName}\nCustomer: ${customerName} | ${customerEmail} | ${customerPhone}`,
     });
@@ -226,8 +246,17 @@ export const sendRepairCompletedEmail = async (appointmentData) => {
     const body = `
       <!-- Hero banner -->
       <div style="background:linear-gradient(135deg,${B} 0%,${BD} 100%);padding:40px 36px;text-align:center;">
-        <div style="width:72px;height:72px;background:rgba(255,255,255,.2);border-radius:50%;margin:0 auto 18px;display:table-cell;vertical-align:middle;text-align:center;font-size:34px;line-height:72px;width:72px;">✅</div>
-        <h1 style="margin:12px 0 8px;font-size:28px;font-weight:800;color:#fff;letter-spacing:-.5px;">Your Device is Ready!</h1>
+        <!-- Checkmark icon — HTML/CSS only, no emoji, works in all email clients -->
+        <table align="center" cellpadding="0" cellspacing="0" style="margin:0 auto 18px;">
+          <tr>
+            <td width="72" height="72" align="center" valign="middle"
+              style="background:rgba(255,255,255,.2);border-radius:36px;font-size:38px;font-weight:700;
+                     color:#fff;line-height:72px;text-align:center;vertical-align:middle;">
+              &#10003;
+            </td>
+          </tr>
+        </table>
+        <h1 style="margin:0 0 8px;font-size:28px;font-weight:800;color:#fff;letter-spacing:-.5px;">Your Device is Ready!</h1>
         <p style="margin:0;font-size:15px;color:rgba(255,255,255,.85);">Your repair has been completed successfully.</p>
       </div>
 
@@ -249,7 +278,7 @@ export const sendRepairCompletedEmail = async (appointmentData) => {
           <tr>
             <td style="padding:9px 0;font-size:13px;color:#6b7280;font-weight:600;width:42%;">Status</td>
             <td style="padding:9px 0;">
-              <span style="display:inline-block;background:#dcfce7;color:#15803d;font-size:12px;font-weight:700;padding:3px 12px;border-radius:20px;letter-spacing:.03em;">✓ Completed</span>
+              <span style="display:inline-block;background:#dcfce7;color:#15803d;font-size:12px;font-weight:700;padding:3px 12px;border-radius:20px;letter-spacing:.03em;">&#10003; Completed</span>
             </td>
           </tr>
         `)}
@@ -261,29 +290,29 @@ export const sendRepairCompletedEmail = async (appointmentData) => {
           <tr><td style="padding:18px 22px;">
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
-                <td style="padding:4px 0;font-size:13px;color:#374151;">📍 <strong>1823 7th St, Moline, IL 61265</strong></td>
+                <td style="padding:4px 0;font-size:13px;color:#374151;">&#128205; <strong>1823 7th St, Moline, IL 61265</strong></td>
               </tr>
               <tr>
-                <td style="padding:4px 0;font-size:13px;color:#374151;">📞 <a href="tel:3097627500" style="color:${B};text-decoration:none;font-weight:600;">309-762-7500</a></td>
+                <td style="padding:4px 0;font-size:13px;color:#374151;">&#128222; <a href="tel:3097627500" style="color:${B};text-decoration:none;font-weight:600;">309-762-7500</a></td>
               </tr>
               <tr>
-                <td style="padding:4px 0;font-size:13px;color:#6b7280;">Mon–Fri 9am–6pm &nbsp;·&nbsp; Sat 10am–4pm &nbsp;·&nbsp; Sun Closed</td>
+                <td style="padding:4px 0;font-size:13px;color:#6b7280;">&#128336; Mon–Sat 9am–7pm &nbsp;·&nbsp; Sun Closed</td>
               </tr>
             </table>
           </td></tr>
         </table>
 
         <p style="margin:0;font-size:14px;color:#9ca3af;line-height:1.6;text-align:center;">
-          Thank you for choosing PlusProtech — we look forward to seeing you! 😊
+          Thank you for choosing PlusProtech — we look forward to seeing you!
         </p>
       </div>`;
 
     return await sendViaBrevo({
       sender: SENDER,
       to: [{ email: customerEmail, name: customerName || 'Valued Customer' }],
-      subject: `✅ Your device is ready for pickup — PlusProtech`,
+      subject: `Your device is ready for pickup — PlusProtech`,
       htmlContent: emailWrapper(body),
-      textContent: `Hi ${customerName || 'there'},\n\nYour device repair is complete and ready for pickup!\n\nDevice: ${modelName}\nService: ${serviceName}\nStatus: Completed\n\nVisit us: PlusProtech, 1823 7th St, Moline, IL 61265\nPhone: 309-762-7500\n\nThank you for choosing PlusProtech!`,
+      textContent: `Hi ${customerName || 'there'},\n\nYour device repair is complete and ready for pickup!\n\nDevice: ${modelName}\nService: ${serviceName}\nStatus: Completed\n\nVisit us: PlusProtech, 1823 7th St, Moline, IL 61265\nPhone: 309-762-7500\nHours: Mon–Sat 9am–7pm, Sun Closed\n\nThank you for choosing PlusProtech!`,
     });
   } catch (error) {
     console.error('Failed to send repair completion email:', error);

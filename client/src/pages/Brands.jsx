@@ -12,6 +12,7 @@ import { Skeleton } from '../components/ui/skeleton';
 import { Plus, Edit, Trash2, Image as ImageIcon, Tag } from 'lucide-react';
 import DeleteConfirmationDialog from '../components/DeleteConfirmationDialog';
 import BrandForm from '../components/BrandForm';
+import { getImageUrl } from '../lib/utils';
 
 const Brands = () => {
     const { data, isLoading, error } = useGetBrandsQuery();
@@ -21,14 +22,6 @@ const Brands = () => {
     const [editingBrand, setEditingBrand] = useState(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [brandToDelete, setBrandToDelete] = useState(null);
-
-    const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    const getImageUrl = (imagePath) => {
-        if (!imagePath) return null;
-        if (imagePath.startsWith('http')) return imagePath;
-        const baseUrl = BASE_URL.endsWith('/api') ? BASE_URL.slice(0, -4) : BASE_URL;
-        return `${baseUrl}${imagePath}`;
-    };
 
     const handleEdit = (brand) => {
         setEditingBrand(brand);
@@ -154,17 +147,17 @@ const Brands = () => {
                         return (
                             <Card key={brand._id} className="overflow-hidden group hover:shadow-md transition-shadow">
                                 {/* Brand image or initial */}
-                                <div className="h-28 bg-muted flex items-center justify-center">
-                                    {imageUrl ? (
+                                <div className="h-28 bg-muted flex items-center justify-center relative">
+                                    <span className="text-5xl font-bold text-muted-foreground/40">{initial}</span>
+                                    {imageUrl && (
                                         <img
                                             src={imageUrl}
                                             alt={brand.name}
                                             loading="lazy"
                                             decoding="async"
-                                            className="w-full h-full object-contain p-3"
+                                            className="absolute inset-0 w-full h-full object-contain p-3"
+                                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
                                         />
-                                    ) : (
-                                        <span className="text-5xl font-bold text-muted-foreground/40">{initial}</span>
                                     )}
                                 </div>
                                 <CardHeader className="p-3 pb-0">

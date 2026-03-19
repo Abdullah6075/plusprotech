@@ -78,8 +78,8 @@ app.use(express.urlencoded({
 // Serve static files from uploads folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Serve logo for email templates
-app.use('/logo.png', express.static(path.join(__dirname, 'public', 'logo.png')));
+// Serve logo for email templates (file lives at server/logo.png)
+app.use('/logo.png', express.static(path.join(__dirname, 'logo.png')));
 
 // Test endpoint to verify everything is working
 app.get('/api/test', (req, res) => {
@@ -126,7 +126,7 @@ app.all('/*any', (req, res) => {
 app.use(errorHandler);
 
 // Start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8000;
 
 app.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);

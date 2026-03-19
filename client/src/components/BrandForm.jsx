@@ -7,23 +7,16 @@ import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { ImageIcon, Upload, CheckSquare, Square } from 'lucide-react';
+import { getImageUrl } from '../lib/utils';
 
 const BrandForm = ({ brand, onSuccess, onClose }) => {
     const [createBrand, { isLoading: isCreating }] = useCreateBrandMutation();
     const [updateBrand, { isLoading: isUpdating }] = useUpdateBrandMutation();
-    const { data: categoriesData } = useGetCategoriesQuery();
+    const { data: categoriesData } = useGetCategoriesQuery({ limit: 1000 });
     const [imagePreview, setImagePreview] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
 
     const categories = categoriesData?.data?.categories || [];
-
-    const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    const getImageUrl = (imagePath) => {
-        if (!imagePath) return null;
-        if (imagePath.startsWith('http')) return imagePath;
-        const baseUrl = BASE_URL.endsWith('/api') ? BASE_URL.slice(0, -4) : BASE_URL;
-        return `${baseUrl}${imagePath}`;
-    };
 
     useEffect(() => {
         if (brand) {

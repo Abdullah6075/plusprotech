@@ -9,6 +9,7 @@ import { Badge } from '../components/ui/badge';
 import ModelForm from '../components/ModelForm';
 import DeleteConfirmationDialog from '../components/DeleteConfirmationDialog';
 import PaginationControls from '../components/PaginationControls';
+import { getImageUrl } from '../lib/utils';
 
 /**
  * Models Page
@@ -67,16 +68,6 @@ const Models = () => {
     if (currentPage !== 1) {
       setCurrentPage(1);
     }
-  };
-
-  const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith('http')) return imagePath;
-    const baseUrl = BASE_URL.endsWith('/api')
-      ? BASE_URL.slice(0, -4)
-      : BASE_URL;
-    return `${baseUrl}${imagePath}`;
   };
 
   if (isLoading) {
@@ -160,6 +151,7 @@ const Models = () => {
             </SheetHeader>
             <div className="flex-1 overflow-y-auto px-6 pb-6">
               <ModelForm
+                key={editingModel?._id ?? 'new'}
                 model={editingModel}
                 onSuccess={handleSuccess}
                 onClose={handleClose}
@@ -194,21 +186,17 @@ const Models = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {models.map((model) => (
             <Card key={model._id} className="overflow-hidden hover:shadow-md transition-shadow">
-              <div className="relative h-48 bg-muted">
-                {getImageUrl(model.image) ? (
+              <div className="relative h-48 bg-white flex items-center justify-center border-b">
+                <ImageIcon className="h-12 w-12 text-muted-foreground" />
+                {getImageUrl(model.image) && (
                   <img
                     src={getImageUrl(model.image)}
                     alt={model.name}
                     loading="lazy"
                     decoding="async"
-                    width="400"
-                    height="192"
-                    className="w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-contain p-3"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <ImageIcon className="h-12 w-12 text-muted-foreground" />
-                  </div>
                 )}
               </div>
               <CardHeader>

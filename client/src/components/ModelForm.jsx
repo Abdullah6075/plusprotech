@@ -18,56 +18,42 @@ import {
   SelectValue,
 } from './ui/select';
 import { ImageIcon, Upload, Info } from 'lucide-react';
+import { getImageUrl } from '../lib/utils';
 
 const ModelForm = ({ model, onSuccess, onClose }) => {
   const [createModel, { isLoading: isCreating }] = useCreateModelMutation();
   const [updateModel, { isLoading: isUpdating }] = useUpdateModelMutation();
-  const { data: categoriesData } = useGetCategoriesQuery();
-  const [imagePreview, setImagePreview] = useState(null);
+  const { data: categoriesData } = useGetCategoriesQuery({ limit: 1000 });
+  const [imagePreview, setImagePreview] = useState(
+    model?.image ? getImageUrl(model.image) : null
+  );
   const [selectedFile, setSelectedFile] = useState(null);
 
   const categories = categoriesData?.data?.categories || [];
 
-  // Watch the selected categoryId to filter brands
+  // Tracks which category is selected to drive the brand sub-query
   const [selectedCategoryId, setSelectedCategoryId] = useState(
     model?.categoryId?._id || model?.categoryId || ''
   );
 
-  // Only fetch brands for the selected category
   const { data: brandsData, isFetching: brandsFetching } = useGetBrandsByCategoryQuery(
     selectedCategoryId,
     { skip: !selectedCategoryId }
   );
   const brands = brandsData?.data?.brands || [];
 
-  const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith('http')) return imagePath;
-    const baseUrl = BASE_URL.endsWith('/api') ? BASE_URL.slice(0, -4) : BASE_URL;
-    return `${baseUrl}${imagePath}`;
-  };
-
-  useEffect(() => {
-    if (model) {
-      const catId = model.categoryId?._id || model.categoryId || '';
-      setSelectedCategoryId(catId);
-      formik.setValues({
-        name: model.name || '',
-        categoryId: catId,
-        brandId: model.brandId?._id || model.brandId || '',
-      });
-      if (model.image) setImagePreview(getImageUrl(model.image));
-    } else {
-      setSelectedCategoryId('');
-      formik.resetForm();
-      setImagePreview(null);
-      setSelectedFile(null);
-    }
-  }, [model]);
+  // Build initial values from the model prop so the Select trigger shows correctly
+  // on the very first render (no flash of empty → populated).
+  const initialCategoryId = model?.categoryId?._id || model?.categoryId || '';
+  const initialBrandId = model?.brandId?._id || model?.brandId || '';
 
   const formik = useFormik({
-    initialValues: { name: '', categoryId: '', brandId: '' },
+    enableReinitialize: true,
+    initialValues: {
+      name: model?.name || '',
+      categoryId: initialCategoryId,
+      brandId: initialBrandId,
+    },
     validationSchema: Yup.object({
       name: Yup.string()
         .min(2, 'Model name must be at least 2 characters')
@@ -115,9 +101,23 @@ const ModelForm = ({ model, onSuccess, onClose }) => {
     },
   });
 
+  // Sync side-effects that can't live in initialValues:
+  // selectedCategoryId state (drives brand query) and image preview
+  useEffect(() => {
+    if (model) {
+      const catId = model.categoryId?._id || model.categoryId || '';
+      setSelectedCategoryId(catId);
+      setImagePreview(model.image ? getImageUrl(model.image) : null);
+    } else {
+      setSelectedCategoryId('');
+      setImagePreview(null);
+      setSelectedFile(null);
+    }
+  }, [model]);
+
   const handleCategoryChange = (value) => {
     formik.setFieldValue('categoryId', value);
-    formik.setFieldValue('brandId', ''); // clear brand when category changes
+    formik.setFieldValue('brandId', '');
     setSelectedCategoryId(value);
   };
 
@@ -232,8 +232,8 @@ const ModelForm = ({ model, onSuccess, onClose }) => {
         </Label>
         <div className="space-y-4">
           {imagePreview && (
-            <div className="relative w-full h-48 border-2 border-dashed border-border rounded-lg overflow-hidden">
-              <img src={imagePreview} alt="Preview" loading="eager" decoding="async" className="w-full h-full object-cover" />
+            <div className="relative w-full h-48 border-2 border-dashed border-border rounded-lg overflow-hidden bg-white">
+              <img src={imagePreview} alt="Preview" loading="eager" decoding="async" className="w-full h-full object-contain p-2" />
             </div>
           )}
           <label

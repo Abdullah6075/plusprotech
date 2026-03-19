@@ -57,16 +57,6 @@ const AdminAppointments = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [appointmentToDelete, setAppointmentToDelete] = useState(null);
 
-  const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith('http')) return imagePath;
-    const baseUrl = BASE_URL.endsWith('/api')
-      ? BASE_URL.slice(0, -4)
-      : BASE_URL;
-    return `${baseUrl}${imagePath}`;
-  };
-
   const handleStatusChange = async (appointmentId, newStatus) => {
     try {
       await updateAppointment({ id: appointmentId, status: newStatus }).unwrap();

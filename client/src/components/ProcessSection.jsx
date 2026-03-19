@@ -1,5 +1,5 @@
 import React from 'react'
-import processImage from "../assets/process-image.jpg"
+import processImage from "../assets/working-process.jpeg"
 import { CalendarCheck, UserCheck, CheckCircle2 } from 'lucide-react'
 
 const STEPS = [
