@@ -11,7 +11,7 @@ const FEATURES = [
 const STATS = [
     { value: '20+', label: 'Years of Experience', bg: 'bg-[#EC4421]' },
     { value: '5,03,000+', label: 'Gadgets Fixed', bg: 'bg-gray-800' },
-    { value: '4,80,000+', label: 'Satisfied Customers', bg: 'bg-gray-700' },
+    { value: '5,01,900+', label: 'Satisfied Customers', bg: 'bg-gray-700' },
     { value: '30 min', label: 'Avg. Repair Time', bg: 'bg-[#EC4421]/85' },
 ]
 
