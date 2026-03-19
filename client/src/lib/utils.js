@@ -14,5 +14,10 @@ export function getImageUrl(imagePath) {
   if (imagePath.startsWith('http')) return imagePath;
   const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
   const baseUrl = BASE_URL.endsWith('/api') ? BASE_URL.slice(0, -4) : BASE_URL;
-  return `${baseUrl}${imagePath}`;
+  
+  // Encode filename only, not the slashes
+  const parts = imagePath.split('/');
+  const encodedPath = parts.map(part => encodeURIComponent(part)).join('/');
+  
+  return `${baseUrl}${encodedPath}`;
 }
