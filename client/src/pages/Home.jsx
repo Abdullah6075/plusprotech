@@ -4,6 +4,7 @@ import AboutSection from '@/components/AboutSection'
 import ServiceSection from '@/components/ServiceSection'
 import WhyUsSection from '@/components/WhyUsSection'
 import ProcessSection from '@/components/ProcessSection'
+import AwardsSection from '@/components/AwardsSection'
 import ReviewsSection from '@/components/ReviewsSection'
 import MapSection from '@/components/MapSection'
 import FAQSection from '@/components/FAQSection'
@@ -60,6 +61,7 @@ const Home = () => {
       <div id="services"><ServiceSection /></div>
       <WhyUsSection />
       <ProcessSection />
+      <AwardsSection />
       <div id="reviews"><ReviewsSection /></div>
       <MapSection />
       <div id="faq"><FAQSection /></div>

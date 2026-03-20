@@ -9,17 +9,27 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Embed the logo as a base64 data URI so it renders in every email client
-// regardless of production URL configuration.
-let LOGO_SRC = '';
-try {
-  const logoPath = path.join(__dirname, '..', 'logo.png');
-  if (fs.existsSync(logoPath)) {
-    LOGO_SRC = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
+// Resolve the logo source for email templates.
+// Gmail and most web-based email clients block data: URIs, so we prefer a
+// public HTTPS URL.  In local development we fall back to a base64 embed.
+const _buildLogoSrc = () => {
+  const backendUrl = (process.env.BACKEND_URL || '').trim().replace(/\/$/, '');
+  // Use public URL when deployed (non-localhost)
+  if (backendUrl && !backendUrl.includes('localhost')) {
+    return `${backendUrl}/logo.png`;
   }
-} catch (e) {
-  console.warn('Could not embed logo in email template:', e.message);
-}
+  // Dev fallback: inline base64 (works in desktop clients, not Gmail)
+  try {
+    const logoPath = path.join(__dirname, '..', 'logo.png');
+    if (fs.existsSync(logoPath)) {
+      return `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
+    }
+  } catch (e) {
+    console.warn('Could not embed logo in email template:', e.message);
+  }
+  return '';
+};
+const LOGO_SRC = _buildLogoSrc();
 
 // Get API key from environment (trim any accidental whitespace)
 const getApiKey = () => {
