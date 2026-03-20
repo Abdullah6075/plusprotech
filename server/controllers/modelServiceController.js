@@ -101,17 +101,24 @@ export const createModelService = async (req, res, next) => {
  */
 export const getAllModelServices = async (req, res, next) => {
   try {
-    const { modelId, serviceId } = req.query;
+    const { modelId, serviceId, categoryId, brandId, search } = req.query;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
     const filter = {};
 
+    if (search) filter.name = { $regex: search.trim(), $options: 'i' };
+    if (serviceId) filter.serviceId = serviceId;
+
+    // If a specific modelId is given use it directly, otherwise filter via category/brand
     if (modelId) {
       filter.modelId = modelId;
-    }
-    if (serviceId) {
-      filter.serviceId = serviceId;
+    } else if (categoryId || brandId) {
+      const modelFilter = {};
+      if (categoryId) modelFilter.categoryId = categoryId;
+      if (brandId) modelFilter.brandId = brandId;
+      const matchingModels = await Model.find(modelFilter, '_id');
+      filter.modelId = { $in: matchingModels.map((m) => m._id) };
     }
 
     // Get total count

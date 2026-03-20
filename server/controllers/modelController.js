@@ -87,7 +87,7 @@ export const createModel = async (req, res, next) => {
  */
 export const getAllModels = async (req, res, next) => {
   try {
-    const { categoryId, brandId } = req.query;
+    const { categoryId, brandId, search } = req.query;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -95,6 +95,7 @@ export const getAllModels = async (req, res, next) => {
 
     if (categoryId) filter.categoryId = categoryId;
     if (brandId) filter.brandId = brandId;
+    if (search) filter.name = { $regex: search.trim(), $options: 'i' };
 
     const total = await Model.countDocuments(filter);
 

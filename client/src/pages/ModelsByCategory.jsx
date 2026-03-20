@@ -1,24 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useGetCategoryByIdQuery } from '../services/categoryApi';
 import { useGetBrandByIdQuery } from '../services/brandApi';
 import { useGetModelsQuery } from '../services/modelApi';
-import { ChevronRight, ArrowLeft, Smartphone, Calendar } from 'lucide-react';
+import { ChevronRight, ArrowLeft, Smartphone, Calendar, Search, X } from 'lucide-react';
 import PaginationControls from '../components/PaginationControls';
 import { getImageUrl } from '../lib/utils';
 
 const ITEMS_PER_PAGE = 12;
+const SEARCH_DEBOUNCE_MS = 400;
 
 const ModelsByCategory = () => {
     const { categoryId, brandId } = useParams();
     const navigate = useNavigate();
     const [currentPage, setCurrentPage] = useState(1);
+    const [searchInput, setSearchInput] = useState('');
+    const [search, setSearch] = useState('');
+    const debounceTimer = useRef(null);
+
+    useEffect(() => {
+        clearTimeout(debounceTimer.current);
+        debounceTimer.current = setTimeout(() => {
+            setSearch(searchInput.trim());
+            setCurrentPage(1);
+        }, SEARCH_DEBOUNCE_MS);
+        return () => clearTimeout(debounceTimer.current);
+    }, [searchInput]);
 
     const { data: categoryData, isLoading: categoryLoading } = useGetCategoryByIdQuery(categoryId);
     const { data: brandData, isLoading: brandLoading } = useGetBrandByIdQuery(brandId);
     const { data: modelsData, isLoading: modelsLoading } = useGetModelsQuery({
         categoryId,
         brandId,
+        search: search || undefined,
         page: currentPage,
         limit: ITEMS_PER_PAGE,
     });
@@ -75,13 +89,35 @@ const ModelsByCategory = () => {
 
             {/* Content */}
             <div className="container py-10">
-                <button
-                    onClick={() => navigate(-1)}
-                    className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#EC4421] transition-colors mb-8"
-                >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to brands
-                </button>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#EC4421] transition-colors"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                        Back to brands
+                    </button>
+
+                    {/* Search bar */}
+                    <div className="relative sm:ml-auto w-full sm:w-72">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                        <input
+                            type="text"
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
+                            placeholder="Search models…"
+                            className="w-full pl-9 pr-8 py-2 text-sm border border-gray-200 rounded-full bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#EC4421]/30 focus:border-[#EC4421] transition-all"
+                        />
+                        {searchInput && (
+                            <button
+                                onClick={() => setSearchInput('')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            >
+                                <X className="w-3.5 h-3.5" />
+                            </button>
+                        )}
+                    </div>
+                </div>
 
                 {isLoading ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
@@ -100,16 +136,29 @@ const ModelsByCategory = () => {
                         <div className="w-16 h-16 bg-[#EC4421]/10 rounded-2xl flex items-center justify-center text-[#EC4421]">
                             <Smartphone className="w-8 h-8" />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-800">No models found</h3>
+                        <h3 className="text-xl font-bold text-gray-800">
+                            {search ? `No results for "${search}"` : 'No models found'}
+                        </h3>
                         <p className="text-sm text-gray-500 max-w-sm">
-                            No models available for <strong>{brand?.name}</strong> in <strong>{category?.name}</strong> yet.
+                            {search
+                                ? 'Try a different search term.'
+                                : <>No models available for <strong>{brand?.name}</strong> in <strong>{category?.name}</strong> yet.</>}
                         </p>
-                        <button
-                            onClick={() => navigate(-1)}
-                            className="mt-2 bg-[#EC4421] hover:bg-[#c93519] text-white px-6 py-2.5 rounded-full text-sm font-semibold transition-all"
-                        >
-                            Back to Brands
-                        </button>
+                        {search ? (
+                            <button
+                                onClick={() => setSearchInput('')}
+                                className="mt-2 bg-[#EC4421] hover:bg-[#c93519] text-white px-6 py-2.5 rounded-full text-sm font-semibold transition-all"
+                            >
+                                Clear search
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => navigate(-1)}
+                                className="mt-2 bg-[#EC4421] hover:bg-[#c93519] text-white px-6 py-2.5 rounded-full text-sm font-semibold transition-all"
+                            >
+                                Back to Brands
+                            </button>
+                        )}
                     </div>
                 ) : (
                     <>

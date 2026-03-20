@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useGetModelsQuery, useDeleteModelMutation } from '../services/modelApi';
+import { useGetCategoriesQuery } from '../services/categoryApi';
+import { useGetBrandsByCategoryQuery } from '../services/brandApi';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from '../components/ui/sheet';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Skeleton } from '../components/ui/skeleton';
-import { Plus, Edit, Trash2, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, Image as ImageIcon, X, Search } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
 import ModelForm from '../components/ModelForm';
 import DeleteConfirmationDialog from '../components/DeleteConfirmationDialog';
@@ -18,15 +21,61 @@ import { getImageUrl } from '../lib/utils';
 const Models = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
-  const { data, isLoading, error } = useGetModelsQuery({ 
-    page: currentPage, 
-    limit: itemsPerPage 
+  const [filterCategoryId, setFilterCategoryId] = useState('');
+  const [filterBrandId, setFilterBrandId] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+  const searchTimer = useRef(null);
+
+  useEffect(() => {
+    clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => {
+      setSearch(searchInput.trim());
+      setCurrentPage(1);
+    }, 400);
+    return () => clearTimeout(searchTimer.current);
+  }, [searchInput]);
+
+  const { data: categoriesData } = useGetCategoriesQuery({ limit: 1000 });
+  const { data: brandsData } = useGetBrandsByCategoryQuery(filterCategoryId, {
+    skip: !filterCategoryId,
   });
+
+  const categories = categoriesData?.data?.categories || [];
+  const brands = brandsData?.data?.brands || [];
+
+  const queryParams = { page: currentPage, limit: itemsPerPage };
+  if (filterCategoryId) queryParams.categoryId = filterCategoryId;
+  if (filterBrandId) queryParams.brandId = filterBrandId;
+  if (search) queryParams.search = search;
+
+  const { data, isLoading, error } = useGetModelsQuery(queryParams);
   const [deleteModel, { isLoading: isDeleting }] = useDeleteModelMutation();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingModel, setEditingModel] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [modelToDelete, setModelToDelete] = useState(null);
+
+  const handleCategoryFilter = (value) => {
+    setFilterCategoryId(value === 'all' ? '' : value);
+    setFilterBrandId('');
+    setCurrentPage(1);
+  };
+
+  const handleBrandFilter = (value) => {
+    setFilterBrandId(value === 'all' ? '' : value);
+    setCurrentPage(1);
+  };
+
+  const clearFilters = () => {
+    setFilterCategoryId('');
+    setFilterBrandId('');
+    setSearchInput('');
+    setSearch('');
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = filterCategoryId || filterBrandId || search;
 
   const handleEdit = (model) => {
     setEditingModel(model);
@@ -70,56 +119,6 @@ const Models = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <Skeleton className="h-9 w-48" />
-            <Skeleton className="h-4 w-64" />
-          </div>
-          <Skeleton className="h-10 w-40" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {[...Array(8)].map((_, i) => (
-            <Card key={i}>
-              <Skeleton className="h-48 w-full" />
-              <CardHeader>
-                <Skeleton className="h-6 w-32" />
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-2">
-                  <Skeleton className="h-9 flex-1" />
-                  <Skeleton className="h-9 flex-1" />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <Skeleton className="h-9 w-48" />
-            <Skeleton className="h-4 w-64" />
-          </div>
-          <Skeleton className="h-10 w-40" />
-        </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Error</CardTitle>
-            <CardDescription>Failed to load models. Please try again later.</CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    );
-  }
-
   const models = data?.data?.models || [];
   const pagination = data?.data?.pagination || {};
 
@@ -161,25 +160,126 @@ const Models = () => {
         </Sheet>
       </div>
 
+      {/* Filters + Search */}
+      <div className="flex flex-wrap items-center gap-3">
+        <Select value={filterCategoryId || 'all'} onValueChange={handleCategoryFilter}>
+          <SelectTrigger className="w-44">
+            <SelectValue placeholder="All Categories" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat._id} value={cat._id}>{cat.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={filterBrandId || 'all'}
+          onValueChange={handleBrandFilter}
+          disabled={!filterCategoryId}
+        >
+          <SelectTrigger className="w-44">
+            <SelectValue placeholder={filterCategoryId ? 'All Brands' : 'Select category first'} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Brands</SelectItem>
+            {brands.map((brand) => (
+              <SelectItem key={brand._id} value={brand._id}>{brand.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Search models…"
+            className="h-9 w-52 rounded-md border border-input bg-background pl-8 pr-7 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+          />
+          {searchInput && (
+            <button
+              onClick={() => setSearchInput('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+
+        {hasActiveFilters && (
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
+            <X className="mr-1 h-3.5 w-3.5" />
+            Clear all
+          </Button>
+        )}
+
+        {pagination.totalItems !== undefined && (
+          <span className="ml-auto text-sm text-muted-foreground">
+            {pagination.totalItems} model{pagination.totalItems !== 1 ? 's' : ''}
+          </span>
+        )}
+      </div>
+
       {/* Models Grid */}
-      {models.length === 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {[...Array(8)].map((_, i) => (
+            <Card key={i}>
+              <Skeleton className="h-48 w-full" />
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-2">
+                  <Skeleton className="h-9 flex-1" />
+                  <Skeleton className="h-9 flex-1" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : error ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Error</CardTitle>
+            <CardDescription>Failed to load models. Please try again later.</CardDescription>
+          </CardHeader>
+        </Card>
+      ) : models.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <div className="rounded-full bg-muted p-3 mb-4">
               <ImageIcon className="h-6 w-6 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold mb-2">No models found</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              {search
+                ? `No results for "${search}"`
+                : hasActiveFilters
+                  ? 'No models match the selected filters'
+                  : 'No models found'}
+            </h3>
             <p className="text-sm text-muted-foreground text-center max-w-sm">
-              Get started by creating your first model
+              {search
+                ? 'Try a different search term or clear the filters.'
+                : hasActiveFilters
+                  ? 'Try a different category or brand combination.'
+                  : 'Get started by creating your first model'}
             </p>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={() => setIsSheetOpen(true)}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Model
-            </Button>
+            {hasActiveFilters ? (
+              <Button variant="outline" className="mt-4" onClick={clearFilters}>
+                <X className="mr-2 h-4 w-4" />
+                Clear all
+              </Button>
+            ) : (
+              <Button variant="outline" className="mt-4" onClick={() => setIsSheetOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Model
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (

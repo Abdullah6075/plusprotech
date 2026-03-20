@@ -14,10 +14,13 @@ export const modelServiceApi = api.injectEndpoints({
     getModelServices: builder.query({
       query: (params = {}) => {
         const queryParams = new URLSearchParams();
-        if (params.modelId) queryParams.append('modelId', params.modelId);
-        if (params.serviceId) queryParams.append('serviceId', params.serviceId);
-        if (params.page) queryParams.append('page', params.page);
-        if (params.limit) queryParams.append('limit', params.limit);
+        if (params.modelId)    queryParams.append('modelId',    params.modelId);
+        if (params.serviceId)  queryParams.append('serviceId',  params.serviceId);
+        if (params.categoryId) queryParams.append('categoryId', params.categoryId);
+        if (params.brandId)    queryParams.append('brandId',    params.brandId);
+        if (params.search)     queryParams.append('search',     params.search);
+        if (params.page)       queryParams.append('page',       params.page);
+        if (params.limit)      queryParams.append('limit',      params.limit);
         const queryString = queryParams.toString();
         return `/model-services${queryString ? `?${queryString}` : ''}`;
       },
