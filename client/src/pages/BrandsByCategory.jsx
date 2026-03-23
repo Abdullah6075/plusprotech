@@ -15,7 +15,7 @@ const BrandCard = ({ brand, categoryId }) => {
             className="group bg-white border border-gray-100 hover:border-[#EC4421]/30 rounded-2xl p-6 flex flex-col items-center gap-4 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1"
         >
             {/* Brand image or initial placeholder */}
-            <div className="w-24 h-24 rounded-2xl overflow-hidden flex items-center justify-center bg-gray-50 border border-gray-100 shrink-0 relative">
+            <div className="w-24 h-24 rounded-2xl overflow-hidden flex items-center justify-center border border-gray-200 shrink-0 relative">
                 <span className="text-4xl font-bold text-[#EC4421]">{initial}</span>
                 {imageUrl && (
                     <img
