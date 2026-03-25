@@ -1,7 +1,11 @@
 import Appointment from '../models/Appointment.js';
 import Model from '../models/Model.js';
 import ModelService from '../models/ModelService.js';
-import { sendAppointmentNotificationToAdmin, sendRepairCompletedEmail } from '../utils/emailService.js';
+import {
+  sendAppointmentNotificationToAdmin,
+  sendAppointmentConfirmationToCustomer,
+  sendRepairCompletedEmail,
+} from '../utils/emailService.js';
 
 /**
  * @route   POST /api/appointments
@@ -46,14 +50,50 @@ export const createAppointment = async (req, res, next) => {
       });
     }
 
+    // Robustly extract YYYY, MM, DD from whatever format the client sends:
+    // - "2026-03-28"              (plain date string from <input type="date">)
+    // - "2026-03-28T00:00:00.000Z" (full ISO string if Yup/Formik serialised it)
+    // - a Date object              (if body-parser deserialised it)
+    const dateRaw = (date instanceof Date ? date.toISOString() : (date || '').toString()).trim();
+    // Pull the first YYYY-MM-DD token from whatever string we have
+    const dateMatch = dateRaw.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (!dateMatch) {
+      console.error('[createAppointment] Unrecognised date value:', JSON.stringify(date));
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid appointment date. Please use the date picker and try again.'
+      });
+    }
+    const [, yr, mo, dy] = dateMatch.map(Number);
+    // Store at noon UTC so the calendar date is the same in any US timezone (avoids off-by-one)
+    const appointmentDate = new Date(Date.UTC(yr, mo - 1, dy, 12, 0, 0, 0));
+
     // Validate date is not in the past
-    const appointmentDate = new Date(date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (appointmentDate < today) {
+    const todayUTC = new Date();
+    todayUTC.setUTCHours(0, 0, 0, 0);
+    if (appointmentDate < todayUTC) {
       return res.status(400).json({
         success: false,
         error: 'Appointment date cannot be in the past'
+      });
+    }
+
+    // Validate not Sunday (shop is closed)
+    const dayOfWeek = appointmentDate.getUTCDay(); // 0 = Sunday
+    if (dayOfWeek === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'We are closed on Sundays. Please select a date from Monday to Saturday.'
+      });
+    }
+
+    // Validate business hours: 9:00 AM – 7:00 PM
+    const [apptHour, apptMin] = time.trim().split(':').map(Number);
+    const apptMinutes = apptHour * 60 + apptMin;
+    if (isNaN(apptMinutes) || apptMinutes < 9 * 60 || apptMinutes >= 19 * 60) {
+      return res.status(400).json({
+        success: false,
+        error: 'Appointment time must be between 9:00 AM and 7:00 PM (shop hours).'
       });
     }
 
@@ -78,26 +118,31 @@ export const createAppointment = async (req, res, next) => {
     await appointment.populate('modelId', 'name image');
     await appointment.populate('modelServiceId', 'name price discountedPrice');
 
-    // Send email notification to admin (non-blocking)
-    try {
-      await sendAppointmentNotificationToAdmin({
-        appointment: {
-          title: appointment.title,
-          description: appointment.description,
-          status: appointment.status
-        },
-        customerName: appointment.name || (appointment.customerId?.name),
-        customerEmail: appointment.contactEmail || (appointment.customerId?.email),
-        customerPhone: appointment.contactPhone || (appointment.customerId?.contactNumber),
-        modelName: appointment.modelId?.name,
-        serviceName: appointment.modelServiceId?.name,
-        appointmentDate: appointment.date,
-        appointmentTime: appointment.time
-      });
-    } catch (emailError) {
-      // Log error but don't fail the appointment creation
-      console.error('Failed to send appointment notification email:', emailError);
-    }
+    const emailData = {
+      customerName: appointment.name || appointment.customerId?.name,
+      customerEmail: appointment.contactEmail || appointment.customerId?.email,
+      customerPhone: appointment.contactPhone || appointment.customerId?.contactNumber,
+      appointmentTitle: appointment.title,
+      modelName: appointment.modelId?.name,
+      serviceName: appointment.modelServiceId?.name,
+      appointmentDate: appointment.date,
+      appointmentTime: appointment.time,
+      price: appointment.modelServiceId?.discountedPrice || appointment.modelServiceId?.price,
+    };
+
+    // Notify admin (non-blocking)
+    sendAppointmentNotificationToAdmin({
+      appointment: {
+        title: appointment.title,
+        description: appointment.description,
+        status: appointment.status,
+      },
+      ...emailData,
+    }).catch((err) => console.error('Admin notification email failed:', err));
+
+    // Confirm booking to customer (non-blocking)
+    sendAppointmentConfirmationToCustomer(emailData)
+      .catch((err) => console.error('Customer confirmation email failed:', err));
 
     res.status(201).json({
       success: true,

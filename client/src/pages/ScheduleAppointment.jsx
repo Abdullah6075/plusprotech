@@ -63,11 +63,25 @@ const ScheduleAppointment = () => {
       contactEmail: Yup.string()
         .email('Please enter a valid email address')
         .required('Contact email is required'),
-      date: Yup.date()
+      date: Yup.string()
         .required('Appointment date is required')
-        .min(today, 'Appointment date cannot be in the past'),
+        .test('not-past', 'Appointment date cannot be in the past', (value) => {
+          if (!value) return false;
+          return value >= new Date().toISOString().split('T')[0];
+        })
+        .test('not-sunday', 'We are closed on Sundays. Please select Monday – Saturday.', (value) => {
+          if (!value) return false;
+          const [y, m, d] = value.split('-').map(Number);
+          return new Date(y, m - 1, d).getDay() !== 0;
+        }),
       time: Yup.string()
-        .required('Appointment time is required'),
+        .required('Appointment time is required')
+        .test('business-hours', 'Please select a time between 9:00 AM and 7:00 PM (shop hours).', (value) => {
+          if (!value) return false;
+          const [h, min] = value.split(':').map(Number);
+          const total = h * 60 + min;
+          return total >= 9 * 60 && total < 19 * 60;
+        }),
     }),
     onSubmit: async (values, { setSubmitting, setFieldError }) => {
       try {
@@ -305,6 +319,7 @@ const ScheduleAppointment = () => {
                   onBlur={formik.handleBlur}
                   aria-invalid={formik.touched.date && formik.errors.date ? 'true' : 'false'}
                 />
+                <p className="text-xs text-muted-foreground">Mon – Sat only (closed Sundays)</p>
                 {formik.touched.date && formik.errors.date ? (
                   <p className="text-sm text-destructive">{formik.errors.date}</p>
                 ) : null}
@@ -318,11 +333,14 @@ const ScheduleAppointment = () => {
                   id="time"
                   name="time"
                   type="time"
+                  min="09:00"
+                  max="19:00"
                   value={formik.values.time}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   aria-invalid={formik.touched.time && formik.errors.time ? 'true' : 'false'}
                 />
+                <p className="text-xs text-muted-foreground">9:00 AM – 7:00 PM</p>
                 {formik.touched.time && formik.errors.time ? (
                   <p className="text-sm text-destructive">{formik.errors.time}</p>
                 ) : null}

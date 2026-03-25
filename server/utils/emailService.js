@@ -179,6 +179,8 @@ export const sendAppointmentNotificationToAdmin = async (appointmentData) => {
     } = appointmentData;
 
     const formattedDate = new Date(appointmentDate).toLocaleDateString('en-US', {
+      timeZone: 'UTC',
+      weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -326,6 +328,118 @@ export const sendRepairCompletedEmail = async (appointmentData) => {
     });
   } catch (error) {
     console.error('Failed to send repair completion email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Send appointment confirmation email to the customer after booking
+ */
+export const sendAppointmentConfirmationToCustomer = async (appointmentData) => {
+  try {
+    const {
+      customerName,
+      customerEmail,
+      appointmentTitle,
+      modelName,
+      serviceName,
+      appointmentDate,
+      appointmentTime,
+      price,
+    } = appointmentData;
+
+    if (!customerEmail) {
+      console.warn('No customer email provided. Confirmation email skipped.');
+      return { success: false, message: 'Customer email not available' };
+    }
+
+    const formattedDate = new Date(appointmentDate).toLocaleDateString('en-US', {
+      timeZone: 'UTC',
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+
+    // Convert 24h time to 12h format for display
+    const [rawH, rawM] = (appointmentTime || '').split(':').map(Number);
+    const ampm = rawH >= 12 ? 'PM' : 'AM';
+    const hour12 = rawH % 12 || 12;
+    const formattedTime = `${hour12}:${String(rawM).padStart(2, '0')} ${ampm}`;
+
+    const body = `
+      <!-- Hero banner -->
+      <div style="background:linear-gradient(135deg,#111 0%,#1f1f1f 100%);padding:36px 36px 28px;border-bottom:1px solid #2a2a2a;">
+        <span style="display:inline-block;background:${B};color:#fff;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:14px;">Confirmed</span>
+        <h1 style="margin:0 0 8px;font-size:26px;font-weight:800;color:#fff;letter-spacing:-.3px;line-height:1.2;">Appointment Confirmed!</h1>
+        <p style="margin:0;font-size:14px;color:rgba(255,255,255,.5);">We've received your booking and look forward to seeing you.</p>
+      </div>
+
+      <!-- Body -->
+      <div style="padding:32px 36px;">
+
+        <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.7;">
+          Hi <strong style="color:#111;">${customerName || 'there'}</strong>,<br><br>
+          Your appointment has been confirmed. Please bring your device on the scheduled date and we'll take care of the rest.
+        </p>
+
+        <!-- Appointment details -->
+        <p style="margin:0 0 12px;font-size:11px;font-weight:700;color:${B};letter-spacing:.12em;text-transform:uppercase;">Appointment Details</p>
+        ${sectionCard(`
+          ${appointmentTitle ? infoRow('Title', appointmentTitle) : ''}
+          ${infoRow('Device', modelName)}
+          ${infoRow('Service', serviceName)}
+          ${price ? infoRow('Price', `$${parseFloat(price).toFixed(2)}`) : ''}
+          <tr>
+            <td style="padding:9px 0;font-size:13px;color:#6b7280;font-weight:600;width:42%;">Date</td>
+            <td style="padding:9px 0;font-size:13px;color:#111;font-weight:600;">${formattedDate}</td>
+          </tr>
+          <tr>
+            <td style="padding:9px 0;font-size:13px;color:#6b7280;font-weight:600;width:42%;">Time</td>
+            <td style="padding:9px 0;font-size:13px;color:#111;font-weight:600;">${formattedTime}</td>
+          </tr>
+          <tr>
+            <td style="padding:9px 0;font-size:13px;color:#6b7280;font-weight:600;width:42%;">Status</td>
+            <td style="padding:9px 0;">
+              <span style="display:inline-block;background:#fef9c3;color:#854d0e;font-size:12px;font-weight:700;padding:3px 12px;border-radius:20px;letter-spacing:.03em;">Confirmed</span>
+            </td>
+          </tr>
+        `)}
+
+        <!-- Visit us -->
+        <p style="margin:0 0 12px;font-size:11px;font-weight:700;color:${B};letter-spacing:.12em;text-transform:uppercase;">Where to Find Us</p>
+        <table width="100%" cellpadding="0" cellspacing="0"
+          style="background:#fff8f6;border:1px solid #fde1d9;border-radius:10px;margin-bottom:28px;">
+          <tr><td style="padding:18px 22px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="padding:4px 0;font-size:13px;color:#374151;">&#128205; <strong>1823 7th St, Moline, IL 61265</strong></td>
+              </tr>
+              <tr>
+                <td style="padding:4px 0;font-size:13px;color:#374151;">&#128222; <a href="tel:3097627500" style="color:${B};text-decoration:none;font-weight:600;">309-762-7500</a></td>
+              </tr>
+              <tr>
+                <td style="padding:4px 0;font-size:13px;color:#6b7280;">&#128336; Mon–Sat 9am–7pm &nbsp;·&nbsp; Sun Closed</td>
+              </tr>
+            </table>
+          </td></tr>
+        </table>
+
+        <p style="margin:0;font-size:13px;color:#9ca3af;line-height:1.6;text-align:center;">
+          Need to reschedule? Call us at <a href="tel:3097627500" style="color:${B};text-decoration:none;">309-762-7500</a> and we'll be happy to help.
+        </p>
+      </div>`;
+
+    return await sendViaBrevo({
+      sender: SENDER,
+      to: [{ email: customerEmail, name: customerName || 'Valued Customer' }],
+      subject: `Appointment Confirmed — PlusProtech`,
+      htmlContent: emailWrapper(body),
+      textContent: `Hi ${customerName || 'there'},\n\nYour appointment is confirmed!\n\nDevice: ${modelName}\nService: ${serviceName}\nDate: ${formattedDate}\nTime: ${formattedTime}\n\nVisit us: PlusProtech, 1823 7th St, Moline, IL 61265\nPhone: 309-762-7500\nHours: Mon–Sat 9am–7pm, Sun Closed\n\nThank you for choosing PlusProtech!`,
+    });
+  } catch (error) {
+    console.error('Failed to send appointment confirmation email:', error);
     return { success: false, error: error.message };
   }
 };
